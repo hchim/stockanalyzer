@@ -31,7 +31,7 @@ def get_adj_close_of_symbols(symbols, start, end, add_spy=True, fill_empty=True)
     dates = pd.date_range(start, end)
     df = pd.DataFrame(index=dates)
     if add_spy and 'SPY' not in symbols:  # add SPY for reference, if absent
-        symbols.append('SPY')
+        symbols = symbols + ['SPY']
 
     for symbol in symbols:
         df_temp = get_data_of_symbol(symbol, start, end, fill_empty=False)

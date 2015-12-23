@@ -1,7 +1,12 @@
+import pandas as pd
+import numpy as np
+
 from utils.webdata import get_data_of_symbol, get_adj_close_of_symbols
-from utils.draw import plot_single_symbol, plot_multi_symbols
+from utils.draw import plot_single_symbol, plot_multi_symbols, normalize_data
 from strategy.sma13_strategy import generate_sma13_orders
 from strategy.bb_strategy import generate_bb_orders
+from analysis.portfolio import find_optimal_allocations, get_portfolio_stats, get_portfolio_value
+
 
 def test_webdata_single():
     startdate = '2015-01-01'
@@ -43,8 +48,38 @@ def test_bb_orders():
     }, orders=orders)
 
 
+def test_portfolio_optimize():
+    startdate = '2015-01-01'
+    enddate = '2015-12-23'
+    symbols = ['GOOG', 'AAPL', 'AMZN', 'FB']
+#    symbols = ['BABA', 'JD', 'VIPS', 'JMEI']
+    prices_all = get_adj_close_of_symbols(symbols, startdate, enddate)  # automatically adds SPY
+    prices = prices_all[symbols]  # only portfolio symbols
+    prices_SPY = prices_all['SPY']  # only SPY, for comparison later
+
+    # get optimal allocations
+    allocs = find_optimal_allocations(prices)
+    allocs = allocs / np.sum(allocs)  # normalize allocations
+
+    port_val = get_portfolio_value(prices, allocs)
+    cum_ret, avg_daily_ret, std_daily_ret, sharpe_ratio = get_portfolio_stats(port_val)
+
+    # Print statistics
+    print "Symbols:", symbols
+    print "Optimal allocations:", allocs
+    print "Sharpe Ratio:", sharpe_ratio
+    print "Volatility:", std_daily_ret
+    print "Average Daily Return:", avg_daily_ret
+    print "Cumulative Return:", cum_ret
+
+    # Compare daily portfolio value with normalized SPY
+    normed_SPY = normalize_data(prices_SPY)
+    df_temp = pd.concat([port_val, normed_SPY], keys=['Portfolio', 'SPY'], axis=1)
+    plot_multi_symbols(df_temp, title="Daily Portfolio Value and SPY")
+
 if __name__ == "__main__":
     # test_webdata_single()
     # test_webdata_multiple()
     # test_sma13_orders()
-    test_bb_orders()
+    # test_bb_orders()
+    test_portfolio_optimize()
