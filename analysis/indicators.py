@@ -4,9 +4,17 @@ import pandas as pd
 def sma(prices, window):
     """
     Calculate the simple moving average indicator
-    :param prices: Series or DataFrame type, the prices
-    :param window: the window of the moving average
-    :return: the simple moving average of the prices in the given window
+
+    Parameters
+    ----------
+    prices: Series or DataFrame
+    window: int
+        the window of the moving average
+
+    Returns
+    ----------
+    sma_val : Series or DataFrame
+        the simple moving average of the prices in the given window
     """
     return pd.rolling_mean(prices, window)
 
@@ -14,9 +22,17 @@ def sma(prices, window):
 def ema(prices, window):
     """
     Calculate the exponential moving average indicator
-    :param prices: Series or DataFrame type, the prices
-    :param window: the window of the exponential moving average
-    :return: the exponential moving average of the prices in the given window
+
+    Parameters
+    ----------
+    prices: Series or DataFrame
+    window: int
+        the window of the exponential moving average
+
+    Returns
+    ----------
+    ema_val: Series or DataFrame
+        the exponential moving average of the prices in the given window
     """
     return pd.ewma(prices, span=window)
 
@@ -24,8 +40,17 @@ def ema(prices, window):
 def bollinger_bands(prices):
     """
     Calculate the bollinger bands indicator
-    :param prices: Series or DataFrame type, the prices
-    :return: middle band, upper band and lower band
+
+    Parameters
+    ----------
+    prices: Series or DataFrame
+
+    Returns
+    ----------
+    rm: Series or DataFrame
+        middle band
+    upper_band : Series or DataFrame
+    lower_band : Series or DataFrame
     """
     rm = pd.rolling_mean(prices, 20)   # 20 day mean
     rstd = pd.rolling_std(prices, 20)  # 20 day standard deviation
@@ -37,9 +62,20 @@ def bollinger_bands(prices):
 
 def macd(prices):
     """
-    calculate the MACD indicator
-    :param prices:   Series or DataFrame type, the prices
-    :return: macd, signal and histgram
+    Calculate the MACD indicator
+
+    Parameters
+    ----------
+    prices: Series or DataFrame
+
+    Returns
+    ----------
+    macd_val: Series or DataFrame
+        macd values
+    signal: Series or DataFrame
+        signal values
+    histgram: Series or DataFrame
+        histgram values
     """
     ema12 = ema(prices, 12)
     ema26 = ema(prices, 26)

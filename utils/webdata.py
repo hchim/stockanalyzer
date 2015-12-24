@@ -1,14 +1,24 @@
 import pandas as pd
-import pandas.io.data as web
+import pandas_datareader.data as web
 
 
 def get_data_of_symbol(symbol, start, end, fill_empty=True):
     """
     Get the daily prices of the symbol in the specified range.
-    :param symbol: the symbol of the stock
-    :param start: the start date
-    :param end: the end date
-    :return: a DataFrame object that contains the columns [Open, High, Low, Close, Adj Close, Volume]
+
+    Parameters
+    ----------
+    symbol: string
+        the symbol of the stock
+    start: string
+        the start date
+    end: string
+        the end date
+
+    Returns
+    ----------
+    df: DataFrame
+        it contains the columns [Open, High, Low, Close, Adj Close, Volume]
     """
     df = web.DataReader(symbol, 'yahoo', start, end)
     # fill empty values
@@ -22,11 +32,20 @@ def get_data_of_symbol(symbol, start, end, fill_empty=True):
 def get_adj_close_of_symbols(symbols, start, end, add_spy=True, fill_empty=True):
     """
     Get the adj close prices of the symbols. Add SPY by default.
-    :param symbols: the symbols
-    :param start: the start date
-    :param end: the end date
-    :param add_spy: add SPY to the symbols
-    :return:
+    Parameters
+    ----------
+    symbols: list
+        the symbols of the stocks
+    start: string
+        the start date
+    end: string
+        the end date
+    add_spy: add SPY to the data
+
+    Returns
+    ----------
+    df: DataFrame
+        the adj close prices of the stocks
     """
     dates = pd.date_range(start, end)
     df = pd.DataFrame(index=dates)

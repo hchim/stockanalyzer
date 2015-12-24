@@ -5,20 +5,23 @@ from analysis.indicators import sma, bollinger_bands, ema, macd
 
 
 def normalize_data(df):
-    """
-    Normalize the values in the DataFrame.
-    :param df: the DataFrame
-    :return:
-    """
     return df/df.iloc[0]
 
 def plot_multi_symbols(prices, title="Stock Prices", xlabel="Date", ylabel="Price", normalize=False):
     """
     Plot multiple symbols
-    :param prices: prices of the symbols
-    :param title: the title of the figure
-    :param xlabel: the x axis of the figure
-    :param ylabel: the y axis of the figure
+
+    Parameters
+    ----------
+    prices: DataFrame
+        prices of the symbols
+    title: string
+        the title of the figure
+    xlabel: string
+        the x axis of the figure
+    ylabel: string
+        the y axis of the figure
+    normalize: boolean
     """
     if normalize:
         prices = normalize_data(prices)
@@ -33,16 +36,25 @@ def plot_multi_symbols(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
 def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Price", indicators={}, orders=None):
     """
     Plot the stock prices with indicators and order signals.
-    :param prices: prices of the symbols
-    :param title: the title of the figure
-    :param xlabel: the x axis of the figure
-    :param ylabel: the y axis of the figure
-    :param indicators: a map object that contain the indicators to draw, the values of the map are the parameters
-                       of the indicator. The indicator can be:
-                       BB:
-                       MACD:
-                       SMA:
-    :param orders: DataFrame object that contain the order signals
+
+    Parameters
+    ----------
+    prices: DataFrame
+        prices of the symbols
+    title: string
+        the title of the figure
+    xlabel: string
+        the x axis of the figure
+    ylabel: string
+        the y axis of the figure
+    indicators: dict
+        It contain the indicators to draw, the values of the dict are the parameters
+        of the indicator. The indicator can be:
+        BB:
+        MACD:
+        SMA:
+    orders: DataFrame
+        the order signals
     """
     if isinstance(prices, pd.DataFrame):
         prices = prices['Adj Close']
@@ -60,6 +72,7 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
 
     # draw price
     prices.plot(label="Price", ax=ax)
+
     ax.set_title(title)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -82,11 +95,6 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
 
 
 def plot_bollinger_band(ax, prices):
-    """
-    Plot bollinger band
-    :param ax: the Axes to draw
-    :param prices: the prices of the symbol
-    """
     middle, upper, lower = bollinger_bands(prices)
     middle.plot(label='Rolling mean', ax=ax)
     upper.plot(label='Upper band', ax=ax)
@@ -94,14 +102,9 @@ def plot_bollinger_band(ax, prices):
 
 
 def plot_macd(ax, prices):
-    """
-    Plot macd
-    :param ax: the Axes to draw
-    :param prices: the prices of the symbol
-    """
     macd_val, signal, histogram = macd(prices)
-    #    ax.hist(histgram.iloc[:, 0], len(histgram.index))
-    #    histgram.plot(ax=ax)
+
+    ax.fill_between(histogram.index, 0, histogram, alpha=0.5)
     macd_val.plot(label='MACD', ax=ax)
     signal.plot(label='Signal', ax=ax)
 
@@ -109,9 +112,12 @@ def plot_macd(ax, prices):
 def plot_orders(ax, orders, prices):
     """
     Plot order signals
-    :param ax:
-    :param orders:
-    :param prices:
+
+    Parameters
+    ----------
+    ax: Axes
+    orders: DataFrame
+    prices: DataFrame
     """
     for i in range(len(orders)):
         date = orders.loc[i, 'Date']
@@ -125,12 +131,6 @@ def plot_orders(ax, orders, prices):
 
 
 def plot_sma(ax, prices, windows):
-    """
-    Plot moving averages
-    :param ax: the Axes to draw
-    :param prices: the prices of the stock
-    :param window: the array of the windows
-    """
     for window in windows:
         sma_val = sma(prices, window)
         sma_val.plot(label="SMA{}".format(window), ax=ax)

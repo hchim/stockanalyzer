@@ -9,12 +9,24 @@ DATE_FORMAT = '%Y-%m-%d'
 def generate_sma13_orders(prices, symbol, start_value=1000000, save_to_file=False, filepath="sma13_orders.csv"):
     """
     Use the SMA13_MACD strategy to generate orders for the symbol.
-    :param prices: the prices of the symbol
-    :param symbol: the symbol of the stock
-    :param start_value: the start value
-    :param save_to_file: save orders to file
-    :param filepath: file path
-    :return: the orders
+
+    Parameters
+    ----------
+    prices: DataFrame
+        the prices of the symbol
+    symbol: string
+        the symbol of the stock
+    start_value: float
+        the start value
+    save_to_file: boolean
+        save orders to file
+    filepath: string
+        file path
+
+    Returns
+    ----------
+    orders: DataFrame
+        the orders
     """
     if isinstance(prices, pd.DataFrame):
         prices = prices['Adj Close']

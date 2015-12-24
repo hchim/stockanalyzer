@@ -6,11 +6,19 @@ def get_portfolio_value(prices, allocs, start_val=1):
     """
     Compute the daily value of the portfolio with the given prices and initial allocations.
 
-    :param prices: the prices of the stocks
-    :param allocs: the allocations
-    :param start_val: the start value of the portfolio
+    Parameters
+    ----------
+    prices: DataFrame
+        the prices of the stocks
+    allocs: list
+        the allocations of the stocks
+    start_val: float
+        the start value of the portfolio
 
-    :return: the daily value of the portfolio.
+    Returns
+    ----------
+    portval: DataFrame
+        the daily value of the portfolio.
     """
     normalized_prices = prices/prices.iloc[0]          # all values divide the first row
     allocated = normalized_prices * allocs * start_val # calculate the allocations and values after the first day
@@ -22,11 +30,25 @@ def get_portfolio_stats(port_val, daily_rf=0, samples_per_year=252):
     """
     Calculate statistics on given portfolio values.
 
-    :param port_val: the daily portfolio value
-    :param daily_rf: daily risk-free rate of return
-    :param samples_per_year: frequency of sampling
+    Parameters
+    ----------
+    port_val: Series
+        the daily portfolio value
+    daily_rf: float
+        daily risk-free rate of return
+    samples_per_year: int
+        frequency of sampling
 
-    :return: cum_ret, avg_daily_ret, std_daily_ret, sharpe_ratio
+    Returns
+    ----------
+    cum_ret: float
+        cumulative return
+    avg_daily_ret: float
+        average daily return
+    std_daily_ret: float
+        the standand deviation of daily return
+    sharpe_ratio: float
+        the sharpe ratio
     """
 
     cum_ret = port_val[-1]/port_val[0] - 1
@@ -42,9 +64,17 @@ def objective_fun_max_sharpe_ratio(allocs, prices):
     """
     The objective function that return max sharpe ratio.
 
-    :param allocs: allocations of stocks
-    :param prices: prices of stocks
-    :return: negative sharpe_ratio
+    Parameters
+    ----------
+    allocs: list
+        allocations of stocks
+    prices: DataFrame
+        prices of stocks
+
+    Returns
+    ----------
+    val: float
+        negative sharpe_ratio
     """
     port_val = get_portfolio_value(prices, allocs, 1)
     cum_ret, avg_daily_ret, std_daily_ret, sharpe_ratio = get_portfolio_stats(port_val)
@@ -56,9 +86,15 @@ def find_optimal_allocations(prices):
     """
     Find the optimal allocations for the portfolio, optimize sharpe ratio.
 
-    :param prices: the prices of stocks
+    Parameters
+    ----------
+    prices: DataFrame
+        the prices of stocks
 
-    :return: the allocation of the stocks
+    Returns
+    ----------
+    alloc: list
+        the allocation of the stocks
     """
     length = len(prices.columns)
     initial_allocs = np.empty(length)

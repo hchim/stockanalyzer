@@ -20,13 +20,24 @@ def generate_bb_orders(prices, symbol, allow_short=True, start_value=1000000, sa
     When this entry signal criteria is met, short the stock and hold it until the exit. The exit signal
     occurs when the price moves from above the SMA to below it.
 
-    :param prices: the prices of the symbol
-    :param symbol: the symbol of the stock
-    :param allow_short: allow short
-    :param start_value: start value
-    :param save_to_file: save orders to file
-    :param filepath: file path
-    :return: orders
+    Parameters
+    ----------
+    prices: DataFrame
+        the prices of the symbol
+    symbol: string
+        the symbol of the stock
+    allow_short: boolean
+        allow short
+    start_value: float
+        start value
+    save_to_file: boolean
+        save orders to file
+    filepath: boolean
+        file path
+
+    Returns
+    ----------
+    orders: DataFrame
     """
     if isinstance(prices, pd.DataFrame):
         prices = prices['Adj Close']
