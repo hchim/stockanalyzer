@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from analysis.indicators import sma, bollinger_bands, ema, macd
+from analysis.indicators import sma, bollinger_bands, ema, macd, rsi
 
 
 def normalize_data(df):
@@ -40,7 +40,7 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     Parameters
     ----------
     prices: DataFrame
-        prices of the symbols
+        prices of the symbols, that in clude [Open, Close, Low, High, Adj Close, Volume]
     title: string
         the title of the figure
     xlabel: string
@@ -49,17 +49,18 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
         the y axis of the figure
     indicators: dict
         It contain the indicators to draw, the values of the dict are the parameters
-        of the indicator. The indicator can be:
-        BB:
-        MACD:
-        SMA:
+        of the indicator. The parameters of each indicator are shown as follows:
+        BB: None
+        MACD: None
+        SMA: {'windows' : [5, 20, 60]}
+        RSI: None (by default the window is 14) or {'window': 14}
     orders: DataFrame
         the order signals
     """
-    if isinstance(prices, pd.DataFrame):
-        prices = prices['Adj Close']
 
-    subfigure_indicator_set = set(['MACD']) # the set of indicators that must be draw in a subfigure
+    close_prices = prices['Adj Close']
+
+    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME"]) # the set of indicators that must be draw in a subfigure
     subfigure_number = len(subfigure_indicator_set.intersection(set(indicators.keys())))
     figure, axarr = plt.subplots(subfigure_number + 1, sharex=True)
     ax = axarr    # Axes of the first subfigure
@@ -68,10 +69,9 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     figure_index = 1
 
     # setup figure
-    figure.subplots_adjust(hspace=0)
 
     # draw price
-    prices.plot(label="Price", ax=ax)
+    close_prices.plot(label="Price", ax=ax)
 
     ax.set_title(title)
     ax.set_xlabel(xlabel)
@@ -79,17 +79,24 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
 
     # plot indicators
     for indicator in indicators.keys():
-        if indicator == 'BB':
-            plot_bollinger_band(ax, prices)
+        if indicator == "VOLUME":
+            volumes = prices['Volume'] * prices['Adj Close']
+            plot_volume(axarr[figure_index], volumes)
+            figure_index += 1
+        elif indicator == 'BB':
+            plot_bollinger_band(ax, close_prices)
         elif indicator == 'SMA':
-            plot_sma(ax, prices, indicators[indicator])
+            plot_sma(ax, close_prices, indicators[indicator])
         elif indicator == 'MACD':
-            plot_macd(axarr[figure_index], prices)
+            plot_macd(axarr[figure_index], close_prices)
+            figure_index += 1
+        elif indicator == 'RSI':
+            plot_rsi(axarr[figure_index], close_prices, indicators[indicator])
             figure_index += 1
 
     # plot orders
     if orders is not None:
-        plot_orders(ax, orders, prices)
+        plot_orders(ax, orders, close_prices)
 
     plt.show()
 
@@ -107,7 +114,7 @@ def plot_macd(ax, prices):
     ax.fill_between(histogram.index, 0, histogram, alpha=0.5)
     macd_val.plot(label='MACD', ax=ax)
     signal.plot(label='Signal', ax=ax)
-
+    ax.set_ylabel('MACD')
 
 def plot_orders(ax, orders, prices):
     """
@@ -130,7 +137,26 @@ def plot_orders(ax, orders, prices):
             ax.plot(date, price, 'v', color='red')
 
 
-def plot_sma(ax, prices, windows):
-    for window in windows:
+def plot_sma(ax, prices, params):
+    for window in params['windows']:
         sma_val = sma(prices, window)
         sma_val.plot(label="SMA{}".format(window), ax=ax)
+
+
+def plot_rsi(ax, prices, params):
+    if not params:
+        window = 14
+    else:
+        window = params['windows']
+
+    rsi_val = rsi(prices, window)
+
+    rsi_val.plot(label='RSI', ax=ax)
+    ax.axhline(70, color="red")
+    ax.axhline(30, color="green")
+    ax.set_ylabel('RSI')
+
+
+def plot_volume(ax, volums):
+    volums.plot(label="Volume", ax=ax)
+    ax.set_ylabel('Volume')

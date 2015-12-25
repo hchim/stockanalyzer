@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 
 def sma(prices, window):
@@ -83,3 +84,27 @@ def macd(prices):
     signal = ema(macd_val, 9)
     histgram = macd_val - signal
     return macd_val, signal, histgram
+
+
+def rsi(prices, window=14):
+    """
+    Calculate the RSI indicator.
+
+    Parameters
+    ----------
+    prices: DataFrame
+    window: int
+
+    Returns
+    ----------
+    rsi_val: DataFrame
+    """
+    delta = prices - prices.shift(1)  # the difference between rows
+    gain = delta[delta > 0]  # gain
+    lose = delta[delta < 0]  # lose
+    data = pd.concat([delta.iloc[1:], gain, lose], axis=1)
+    data.fillna(0, inplace=True) # fill NAN values
+    data = pd.rolling_mean(data, window)  # average daily gain and lose
+    rs = data.iloc[:, 1] / data.iloc[:,2] * -1
+    rsi_val = 100 - 100 / (1 + rs)
+    return rsi_val

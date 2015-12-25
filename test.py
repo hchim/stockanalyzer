@@ -5,7 +5,6 @@ from utils.webdata import get_data_of_symbol, get_adj_close_of_symbols
 from utils.draw import plot_single_symbol, plot_multi_symbols, normalize_data
 from strategy.sma13_strategy import generate_sma13_orders
 from strategy.bb_strategy import generate_bb_orders
-from strategy.macd_strategy import generate_macd_orders
 from analysis.portfolio import find_optimal_allocations, get_portfolio_stats, get_portfolio_value
 from simulator.tradesimulator import compute_portvals
 
@@ -22,9 +21,11 @@ def test_webdata_single():
     enddate = '2015-12-23'
     prices = get_data_of_symbol('AAPL', startdate, enddate, fill_empty=False)
     plot_single_symbol(prices, indicators={
+        "VOLUME" : None,
         "BB" : None,
         "MACD" : None,
-        "SMA" : [5, 13]
+        "SMA" : {'windows': [60, 120]},
+        "RSI" : None
     })
 
 
@@ -104,9 +105,9 @@ def test_simulator():
 
 
 if __name__ == "__main__":
-    # test_webdata_single()
+    test_webdata_single()
     # test_webdata_multiple()
     # test_sma13_orders()
     # test_bb_orders()
     # test_portfolio_optimize()
-    test_simulator()
+    # test_simulator()
