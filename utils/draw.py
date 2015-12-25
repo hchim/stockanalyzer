@@ -160,3 +160,14 @@ def plot_rsi(ax, prices, params):
 def plot_volume(ax, volums):
     volums.plot(label="Volume", ax=ax)
     ax.set_ylabel('Volume')
+
+
+def plot_histogram(data, bins=20):
+    data.hist(bins=bins)
+    plt.show()
+
+
+def plot_scatter(data, beta, alpha, y_symbol, x_symbol = "SPY"):
+    data.plot(kind='scatter', x=x_symbol, y=y_symbol) # draw scatter figure
+    plt.plot(data[x_symbol], beta*data[x_symbol] + alpha, '-', color='r')
+    plt.show()
