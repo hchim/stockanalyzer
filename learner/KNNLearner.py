@@ -1,8 +1,9 @@
 import numpy as np
 import math
+import heapq
 
 from utils.MaxHeap import MaxHeap
-from learner.Learner import Learner
+from Learner import Learner
 
 """
 K nearest neighbors learning algorithm.
@@ -34,21 +35,24 @@ class KNNLearner(Learner):
         return np.array(values)
 
 
-    def get_y(self, x):
+    def get_y(self, point):
         """
         Use KNN algorithm to find the y value of the point.
 
         Parameters
         ----------
         point: array
-        :return:
+
+        Returns
+        ----------
+        y: float
         """
         heap = MaxHeap(self.k)
 
         for i in range(len(self.x)):
-            distance = Learner.euclidean_distance(self.x[i], x)
-            heap.add((distance, self.x[i], self.y[i]))
+            distance = Learner.euclidean_distance(self.x[i], point)
+            heap.add((distance, i, self.x[i], self.y[i])) # if the first value in the tuple is equal, heapq use the second value to compare
 
         values = heap.heapsort()
-        values = [val[2] for val in values]
+        values = [val[3] for val in values]
         return np.array(values).sum()/len(values)

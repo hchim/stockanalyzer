@@ -1,10 +1,12 @@
 import math
 import numpy as np
 
+
 class Learner(object):
 
     def __init__(self):
         pass
+
 
     def train(self, datax, datay):
         """

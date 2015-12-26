@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from learner.Learner import Learner
+from Learner import Learner
 
 """
 Linear regression learner.
