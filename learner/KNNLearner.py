@@ -17,15 +17,8 @@ class KNNLearner(Learner):
 
 
     def train(self, datax, datay):
-        if not self.x:
-            self.x = datax
-        else:
-            self.x = np.vstack(self.x, datax)
-
-        if not self.y:
-            self.y = datay
-        else:
-            self.y = np.vstack(self.y, datay)
+        self.x = datax
+        self.y = datay
 
 
     def query(self, points):

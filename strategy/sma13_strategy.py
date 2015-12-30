@@ -29,7 +29,7 @@ def generate_sma13_orders(prices, symbol, start_value=1000000, save_to_file=Fals
         the orders
     """
     if isinstance(prices, pd.DataFrame):
-        prices = prices['Adj Close']
+        prices = prices['Close']
 
     sma5 = sma(prices, 5)
     sma13 = sma(prices, 13)

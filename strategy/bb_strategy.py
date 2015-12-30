@@ -40,7 +40,7 @@ def generate_bb_orders(prices, symbol, allow_short=True, start_value=1000000, sa
     orders: DataFrame
     """
     if isinstance(prices, pd.DataFrame):
-        prices = prices['Adj Close']
+        prices = prices['Close']
 
     sma20, upper_band, lower_band = bollinger_bands(prices)
     cash = start_value

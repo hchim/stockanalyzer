@@ -40,7 +40,7 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     Parameters
     ----------
     prices: DataFrame
-        prices of the symbols, that in clude [Open, Close, Low, High, Adj Close, Volume]
+        prices of the symbols, that in clude [Open, High, Low, Close, Volume]
     title: string
         the title of the figure
     xlabel: string
@@ -58,7 +58,7 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
         the order signals
     """
 
-    close_prices = prices['Adj Close']
+    close_prices = prices['Close']
 
     subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME"]) # the set of indicators that must be draw in a subfigure
     subfigure_number = len(subfigure_indicator_set.intersection(set(indicators.keys())))
@@ -80,7 +80,7 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     # plot indicators
     for indicator in indicators.keys():
         if indicator == "VOLUME":
-            volumes = prices['Volume'] * prices['Adj Close']
+            volumes = prices['Volume'] * prices['Close']
             plot_volume(axarr[figure_index], volumes)
             figure_index += 1
         elif indicator == 'BB':

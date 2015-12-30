@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from utils.webdata import get_adj_close_of_symbols
+from utils.webdata import get_close_of_symbols
 
 
 def compute_leverage(prices, shares, cash, order_type, order_share, order_symbol):
@@ -70,7 +70,7 @@ def compute_portvals(start_date, end_date, orders=None, orders_file=None, start_
         orders = pd.read_csv(orders_file, parse_dates=True)
 
     symbols = list(set(orders['Symbol']))
-    prices = get_adj_close_of_symbols(symbols, start_date, end_date, add_spy=True) # add SPY so as to remove no-trade days
+    prices = get_close_of_symbols(symbols, start_date, end_date, add_spy=True) # add SPY so as to remove no-trade days
     prices.drop('SPY', axis=1, inplace=True)       # remove SPY
 
     dates = prices.index                           # update dates
@@ -79,7 +79,7 @@ def compute_portvals(start_date, end_date, orders=None, orders_file=None, start_
     shares.loc[:, :] = np.nan
     last_share = dict.fromkeys(shares.columns, 0)  # record the total shares of each symbol
     # init daily cashes
-    cashes = pd.DataFrame({'Cash':np.nan}, index=dates) # record the daily cashes
+    cashes = pd.Series({'Cash':np.nan}, index=dates) # record the daily cashes
     last_cash = start_val                          # record total cash
 
     # iterate orders and simulate the trades
@@ -100,7 +100,7 @@ def compute_portvals(start_date, end_date, orders=None, orders_file=None, start_
             last_share[symbol] += share
             shares.loc[date, symbol] = last_share[symbol]
             val = last_cash - price * share
-            cashes.loc[date] = last_cash = val
+            cashes[date] = last_cash = val
         else:
             temp_share = last_share[symbol] - share
             # short check
@@ -108,7 +108,7 @@ def compute_portvals(start_date, end_date, orders=None, orders_file=None, start_
                 continue
             shares.loc[date, symbol] = last_share[symbol] = temp_share
             last_cash += price * share
-            cashes.loc[date] = last_cash
+            cashes[date] = last_cash
 
     # init the nan values of the first row of shares before invoking fillna
     for symbol in shares.columns:
@@ -117,14 +117,11 @@ def compute_portvals(start_date, end_date, orders=None, orders_file=None, start_
 
     shares.fillna(method="ffill", inplace=True)
     # init the nan value of the first row of cashes before invoking fillna
-    if pd.isnull(cashes.iloc[0, 0]):
-        cashes.iloc[0, 0] = start_val
+    if pd.isnull(cashes.ix[0]):
+        cashes.ix[0] = start_val
     cashes.fillna(method='ffill', inplace=True)
-
-    print prices
-    print shares
-    print prices * shares
-
-    portvals = (prices * shares).sum(axis=1) + cashes
+    values = (prices * shares).sum(axis=1)
+    portvals = (values + cashes).to_frame()
+    portvals.rename(columns={portvals.columns[0]: "Portfolio"}, inplace=True)
     return portvals
 

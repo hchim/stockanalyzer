@@ -47,6 +47,7 @@ class EnsembleLearner(Learner):
 
         return predict/len(self.learners)
 
+
     @staticmethod
     def create_learner(name, args=None):
         """
