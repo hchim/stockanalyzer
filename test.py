@@ -13,6 +13,7 @@ from analysis.normindicators import calculate_indicators
 from strategy.Strategy import Strategy
 from learner.BagLearner import BagLearner
 from learner.KNNLearner import KNNLearner
+from analysis.indicators import discritized_indicators
 
 
 def test_webdata_multiple():
@@ -135,7 +136,6 @@ def test_normalized_indicators():
                                       {
                                           "BB": None,
                                           "MOM":{"window":12},
-                                          "VOL":None,
                                           "CMF":None,
                                       })
     print indicators
@@ -202,8 +202,21 @@ def evaluate_strategy():
     strategy.plot_data()
 
 
+def test_discritized_indicators():
+    startdate = '2015-01-01'
+    enddate = '2015-12-23'
+    prices = get_data_of_symbol("AAPL", startdate, enddate)
+    indicators = discritized_indicators(prices,
+                                      {
+                                          "MFI": None,
+                                          "RSI":{"window":14},
+                                          "CMF":None,
+                                      }, 10)
+    print indicators
+
+
 if __name__ == "__main__":
-    test_webdata_single()
+    # test_webdata_single()
     # test_webdata_multiple()
     # test_sma13_orders()
     # test_bb_orders()
@@ -213,3 +226,4 @@ if __name__ == "__main__":
     # test_normalized_indicators()
     # evaluate_strategy()
     # test_strategy()
+    test_discritized_indicators()

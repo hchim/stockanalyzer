@@ -2,6 +2,80 @@ import pandas as pd
 import numpy as np
 
 
+def discritizing(values, v_range, bin_num):
+    """
+    Discritize the values.
+
+    Parameters
+    ----------
+    values: Series
+    v_range: tuple
+        the range of the values.
+    bin_num: int
+
+    Returns
+    ---------
+    inds: Series
+        The values are between 0 and bin_num - 1.
+    """
+    if isinstance(values, pd.DataFrame):
+        values = values.iloc[:, 0]
+
+    stepsize = (v_range[1] - v_range[0]) * 1.0 / bin_num
+    bins = np.arange(v_range[0], v_range[1], step=stepsize)
+    inds = np.digitize(values, bins) - 1
+    df = pd.DataFrame(inds, index=values.index)
+    return df
+
+
+def discritized_indicators(prices, params, bin_num):
+    """
+    Calculate the discritized indicators with the given prices.
+
+    Parameters
+    ----------
+    prices: DataFrame
+    params: map
+        The keys of the map are the names of the indicators. The values of the map are
+        the parameters to calculate the indicators.
+    bin_num: int
+        The number of bins.
+
+    Returns
+    ----------
+    dist_indicator: DataFrame
+    """
+    indicators = pd.DataFrame(index=prices.index)
+    close = prices['Close']
+
+    for name in params.keys():
+        values = None
+        inds = None
+        if name == "RSI":
+            values = rsi(close, params[name]["window"])
+            values.dropna(inplace=True)
+            inds = discritizing(values, (0, 100), bin_num)
+        elif name == "CMF":
+            values = cmf(prices)
+            values.dropna(inplace=True)
+            inds = discritizing(values, (-1, 1), bin_num)
+        elif name == "MFI":
+            values = mfi(prices)
+            values.dropna(inplace=True)
+            inds = discritizing(values, (0, 100), bin_num)
+
+        if inds is not None:
+            indicators = indicators.join(inds)
+            indicators.rename(columns={indicators.columns[-1]:name}, inplace=True)
+
+    indicators.dropna(inplace=True)
+    dist_indicator = indicators.iloc[:, 0]
+    for col in indicators.columns[1:]:
+        dist_indicator = dist_indicator * bin_num + indicators[col]
+
+    return dist_indicator
+
+
 def sma(prices, window):
     """
     Calculate the simple moving average indicator
