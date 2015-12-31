@@ -108,3 +108,57 @@ def rsi(prices, window=14):
     rs = data.iloc[:, 1] / data.iloc[:,2] * -1
     rsi_val = 100 - 100 / (1 + rs)
     return rsi_val
+
+
+def cmf(prices):
+    """
+    1. Money Flow Multiplier = [(Close  -  Low) - (High - Close)] /(High - Low)
+    2. Money Flow Volume = Money Flow Multiplier x Volume for the Period
+    3. 20-period CMF = 20-period Sum of Money Flow Volume / 20 period Sum of Volume
+
+    Parameters
+    ----------
+    prices: DataFrame
+        Includes the open, close, high, low and volume.
+
+    Returns
+    ----------
+    cmf_val: DataFrame
+    """
+    mfm = ((prices['Close'] - prices['Low']) - (prices['High'] - prices['Close'])) \
+          /(prices['High'] - prices['Low'])
+    mfv = mfm * prices['Volume']
+    mfv = pd.rolling_sum(mfv, 20)
+    volumes = pd.rolling_sum(prices['Volume'], 20)
+    return (mfv/volumes).to_frame()
+
+
+def mfi(prices):
+    """
+    1. Typical Price = (High + Low + Close)/3
+    2. Raw Money Flow = Typical Price x Volume
+    3. Money Flow Ratio = (14-period Positive Money Flow)/(14-period Negative Money Flow)
+    4. Money Flow Index = 100 - 100/(1 + Money Flow Ratio)
+
+    Parameters
+    ----------
+    prices: DataFrame
+        Includes the open, close, high, low and volume.
+
+    Returns
+    ----------
+    mfi_val: DataFrame
+    """
+    tp = (prices['High'] + prices['Low'] + prices['Close']) / 3.0
+    rmf = tp * prices['Volume']
+    prmf = rmf.copy()
+    nrmf = rmf.copy()
+    for date in prices.index:
+        if prices.loc[date, 'Close'] >= prices.loc[date, 'Open']:
+            nrmf[date] = 0
+        else:
+            prmf[date] = 0
+
+    mfr = pd.rolling_sum(prmf, 14)/pd.rolling_sum(nrmf, 14)
+    mfi_val = 100 - 100. / (1 + mfr)
+    return mfi_val.to_frame()

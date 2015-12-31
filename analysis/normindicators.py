@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from analysis.basic import compute_daily_returns
-from analysis.indicators import ema
+from analysis.indicators import ema, cmf, mfi
 
 """
 The package defines the algorithms that calculate the normalized indicators.
@@ -44,6 +44,10 @@ def calculate_indicators(prices, params):
             values = norm_ema(close, window)
         elif name == "MACD":
             values = norm_macd(close)
+        elif name == "CMF":
+            values = cmf(prices)
+        elif name == "MFI":
+            values = norm_mfi(prices)
 
         if values is not None:
             indicators = indicators.join(values)
@@ -81,15 +85,6 @@ def norm_volatility(prices):
     return pd.DataFrame(data=vols, index=prices.index)
 
 
-def norm_cmf(prices):
-    """
-    1. Money Flow Multiplier = [(Close  -  Low) - (High - Close)] /(High - Low)
-    2. Money Flow Volume = Money Flow Multiplier x Volume for the Period
-    3. 20-period CMF = 20-period Sum of Money Flow Volume / 20 period Sum of Volume
-    """
-    pass
-
-
 def norm_rsi(prices, params={"window":14}):
     """
     Calculate the RSI indicator and normalize the range to [-1, 1].
@@ -125,28 +120,16 @@ def norm_ema(prices, window):
 
 
 def norm_macd(prices):
-    """
-    Calculate the MACD indicator
-
-    Parameters
-    ----------
-    prices: Series or DataFrame
-
-    Returns
-    ----------
-    macd_val: Series or DataFrame
-        macd values
-    signal: Series or DataFrame
-        signal values
-    histgram: Series or DataFrame
-        histgram values
-    """
     ema12 = ema(prices, 12)
     ema26 = ema(prices, 26)
     macd_val = ema12 - ema26
     signal = ema(macd_val, 9)
     histgram = macd_val - signal
     return normalize_indicator(histgram)
+
+def norm_mfi(prices):
+    mfi_val = mfi(prices)
+    return (mfi_val - 50) / 50.
 
 
 def normalize_indicator(values):

@@ -32,7 +32,9 @@ def test_webdata_single():
         "BB" : None,
         "MACD" : None,
         "SMA" : {'windows': [60, 120]},
-        "RSI" : None
+        "RSI" : None,
+        "MFI" : None,
+        "CMF" : None,
     })
 
 
@@ -129,7 +131,13 @@ def test_normalized_indicators():
     startdate = '2015-01-01'
     enddate = '2015-12-23'
     prices = get_data_of_symbol("AAPL", startdate, enddate)
-    indicators = calculate_indicators(prices, {"BB": None, "MOM":{"window":12}, "VOL":None})
+    indicators = calculate_indicators(prices,
+                                      {
+                                          "BB": None,
+                                          "MOM":{"window":12},
+                                          "VOL":None,
+                                          "CMF":None,
+                                      })
     print indicators
 
 
@@ -174,9 +182,8 @@ def test_strategy():
 def evaluate_strategy():
     startdate = '2014-01-01'
     enddate = '2015-12-28'
-    prices = get_data_of_symbol("IBM", startdate, enddate)
-    indicators = {"RSI": {"window":14}, "MACD":None, "SMA13":None}
-
+    prices = get_data_of_symbol("AAPL", startdate, enddate)
+    indicators = {"CMF":None, "SMA5": None}
     # compute how much of the data is training and testing
     train_rows = math.floor(0.6 * len(prices))
     test_rows = len(prices) - train_rows
@@ -196,7 +203,7 @@ def evaluate_strategy():
 
 
 if __name__ == "__main__":
-    # test_webdata_single()
+    test_webdata_single()
     # test_webdata_multiple()
     # test_sma13_orders()
     # test_bb_orders()
@@ -204,5 +211,5 @@ if __name__ == "__main__":
     # test_simulator()
     # test_market_correlation_analysis()
     # test_normalized_indicators()
-    evaluate_strategy()
+    # evaluate_strategy()
     # test_strategy()

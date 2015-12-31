@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from analysis.indicators import sma, bollinger_bands, ema, macd, rsi
+from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf
 
 
 def normalize_data(df):
@@ -60,7 +60,7 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
 
     close_prices = prices['Close']
 
-    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME"]) # the set of indicators that must be draw in a subfigure
+    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF"]) # the set of indicators that must be draw in a subfigure
     subfigure_number = len(subfigure_indicator_set.intersection(set(indicators.keys())))
     figure, axarr = plt.subplots(subfigure_number + 1, sharex=True)
     ax = axarr    # Axes of the first subfigure
@@ -87,11 +87,19 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
             plot_bollinger_band(ax, close_prices)
         elif indicator == 'SMA':
             plot_sma(ax, close_prices, indicators[indicator])
+        elif indicator == 'EMA':
+            plot_ema(ax, close_prices, indicators[indicator])
         elif indicator == 'MACD':
             plot_macd(axarr[figure_index], close_prices)
             figure_index += 1
         elif indicator == 'RSI':
             plot_rsi(axarr[figure_index], close_prices, indicators[indicator])
+            figure_index += 1
+        elif indicator == "CMF":
+            plot_cmf(axarr[figure_index], prices)
+            figure_index += 1
+        elif indicator == "MFI":
+            plot_mfi(axarr[figure_index], prices)
             figure_index += 1
 
     # plot orders
@@ -115,6 +123,7 @@ def plot_macd(ax, prices):
     macd_val.plot(label='MACD', ax=ax)
     signal.plot(label='Signal', ax=ax)
     ax.set_ylabel('MACD')
+
 
 def plot_orders(ax, orders, prices):
     """
@@ -143,6 +152,12 @@ def plot_sma(ax, prices, params):
         sma_val.plot(label="SMA{}".format(window), ax=ax)
 
 
+def plot_ema(ax, prices, params):
+    for window in params['windows']:
+        sma_val = sma(prices, window)
+        sma_val.plot(label="EMA{}".format(window), ax=ax)
+
+
 def plot_rsi(ax, prices, params):
     if not params:
         window = 14
@@ -156,6 +171,24 @@ def plot_rsi(ax, prices, params):
     ax.axhline(30, color="green")
     ax.set_ylabel('RSI')
 
+
+def plot_cmf(ax, prices):
+    cmf_val = cmf(prices)
+
+    cmf_val.plot(label='CMF', ax=ax)
+    ax.axhline(0, color="black")
+    ax.set_ylabel('CMF')
+    ax.legend_ = None
+
+
+def plot_mfi(ax, prices):
+    mfi_val = mfi(prices)
+
+    mfi_val.plot(label='MFI', ax=ax)
+    ax.axhline(80, color="red")
+    ax.axhline(20, color="green")
+    ax.set_ylabel('MFI')
+    ax.legend_ = None
 
 def plot_volume(ax, volums):
     volums.plot(label="Volume", ax=ax)
