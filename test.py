@@ -14,6 +14,7 @@ from strategy.Strategy import Strategy
 from learner.BagLearner import BagLearner
 from learner.KNNLearner import KNNLearner
 from analysis.indicators import discritized_indicators
+from strategy.QStrategy import QStrategy
 
 
 def test_webdata_multiple():
@@ -215,6 +216,26 @@ def test_discritized_indicators():
     print indicators
 
 
+def test_qstrategy():
+    strategy = QStrategy({
+        "RSI":{"window":14},
+        # "MFI":None,
+        # "CMF":None,
+    }, 10)
+    startdate = '2010-01-01'
+    enddate = '2015-12-28'
+    prices = get_data_of_symbol("AAPL", startdate, enddate)
+
+    # compute how much of the data is training and testing
+    train_rows = math.floor(0.85 * len(prices))
+    test_rows = len(prices) - train_rows
+    strategy.train_learner(prices.iloc[:train_rows,:])
+    strategy.plot_data()
+    # predict = strategy.predict(prices, test_rows)
+    # predict = predict['Action']
+    # print predict[predict < 2]
+
+
 if __name__ == "__main__":
     # test_webdata_single()
     # test_webdata_multiple()
@@ -226,4 +247,5 @@ if __name__ == "__main__":
     # test_normalized_indicators()
     # evaluate_strategy()
     # test_strategy()
-    test_discritized_indicators()
+    # test_discritized_indicators()
+    test_qstrategy()
