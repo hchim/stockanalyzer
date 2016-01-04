@@ -66,3 +66,7 @@ class Strategy(object):
 
     def is_cover_signal(self, inds, pre_inds, prices, pre_prices):
         return False
+
+
+    def get_indicator_params(self):
+        return self.indicator_params

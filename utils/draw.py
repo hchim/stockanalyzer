@@ -85,10 +85,12 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
             figure_index += 1
         elif indicator == 'BB':
             plot_bollinger_band(ax, close_prices)
-        elif indicator == 'SMA':
-            plot_sma(ax, close_prices, indicators[indicator])
-        elif indicator == 'EMA':
-            plot_ema(ax, close_prices, indicators[indicator])
+        elif indicator.startswith("SMA"):
+            window = int(indicator[3:])
+            plot_sma(ax, close_prices, window)
+        elif indicator.startswith("EMA"):
+            window = int(indicator[3:])
+            plot_ema(ax, close_prices, window)
         elif indicator == 'MACD':
             plot_macd(axarr[figure_index], close_prices)
             figure_index += 1
@@ -146,16 +148,14 @@ def plot_orders(ax, orders, prices):
             ax.plot(date, price, 'v', color='red')
 
 
-def plot_sma(ax, prices, params):
-    for window in params['windows']:
-        sma_val = sma(prices, window)
-        sma_val.plot(label="SMA{}".format(window), ax=ax)
+def plot_sma(ax, prices, window):
+    sma_val = sma(prices, window)
+    sma_val.plot(label="SMA{}".format(window), ax=ax)
 
 
-def plot_ema(ax, prices, params):
-    for window in params['windows']:
-        sma_val = sma(prices, window)
-        sma_val.plot(label="EMA{}".format(window), ax=ax)
+def plot_ema(ax, prices, window):
+    sma_val = sma(prices, window)
+    sma_val.plot(label="EMA{}".format(window), ax=ax)
 
 
 def plot_rsi(ax, prices, params):

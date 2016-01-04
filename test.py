@@ -30,7 +30,7 @@ def test_webdata_single():
         "VOLUME" : None,
         "BB" : None,
         "MACD" : None,
-        "SMA" : {'windows': [60, 120]},
+        "SMA5" : None,
         "RSI" : None,
         "MFI" : None,
         "CMF" : None,

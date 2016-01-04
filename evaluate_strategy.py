@@ -36,7 +36,14 @@ def evaluate_SMA13():
     evaluator.evaluate(SYMBOLS_IT)
 
 
+def evaluate_symbol(strategy, symbol, startdate, enddate):
+    evaluator = StrategyEvaluator(strategy)
+    evaluator.evaluate({symbol: {"startdate":startdate, "enddate": enddate}})
+    evaluator.plot_order_signals(symbol)
+
+
 if __name__ == "__main__":
     # evaluate_BB()
     # evaluate_CMF()
     evaluate_SMA13()
+    # evaluate_symbol(SMA13Strategy(), "GOOG", "2015-01-01", "2015-12-31")
