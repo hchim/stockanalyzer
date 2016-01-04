@@ -76,6 +76,58 @@ def discritized_indicators(prices, params, bin_num):
     return dist_indicator
 
 
+def calculate_indicators(prices, params):
+    """
+    Calculate the indicators with the given prices.
+
+    Parameters
+    ----------
+    prices: DataFrame
+    params: map
+        The keys of the map are the names of the indicators. The values of the map are
+        the parameters to calculate the indicators.
+
+    Returns
+    ----------
+    dist_indicator: DataFrame
+    """
+    indicators = pd.DataFrame(index=prices.index)
+    close = prices['Close']
+
+    for name in params.keys():
+        values = None
+        if name == "RSI":
+            values = rsi(close, params[name]["window"])
+        elif name == "CMF":
+            values = cmf(prices)
+        elif name == "MFI":
+            values = mfi(prices)
+        elif name == "BB":
+            rm, upper, lower = bollinger_bands(close)
+            values = pd.DataFrame(index=rm.index, columns=["BB_Middle", "BB_Upper", "BB_Lower"])
+            values.loc[:, "BB_Middle"] = rm
+            values.loc[:, "BB_Upper"] = upper
+            values.loc[:, "BB_Lower"] = lower
+        elif name.startswith("SMA"):
+            window = int(name[3:])
+            values = sma(close, window)
+        elif name.startswith("EMA"):
+            window = int(name[3:])
+            values = ema(close, window)
+        elif name == "MACD":
+            macd_val, signal, histgram = macd(close)
+            values = pd.DataFrame(index=macd_val.index, columns=["MACD_Val", "MACD_Signal", "MACD_Histgram"])
+            values.loc[:, "MACD_Val"] = macd_val
+            values.loc[:, "MACD_Signal"] = signal
+            values.loc[:, "MACD_Histgram"] = histgram
+
+        if values is not None:
+            indicators = indicators.join(values)
+
+    indicators.dropna(inplace=True)
+    return indicators
+
+
 def sma(prices, window):
     """
     Calculate the simple moving average indicator
@@ -91,7 +143,12 @@ def sma(prices, window):
     sma_val : Series or DataFrame
         the simple moving average of the prices in the given window
     """
-    return pd.rolling_mean(prices, window)
+    sma_val = pd.rolling_mean(prices, window)
+    if isinstance(sma_val, pd.Series):
+        sma_val = sma_val.to_frame()
+
+    sma_val.rename(columns={sma_val.columns[-1]:"SMA{}".format(window)}, inplace=True)
+    return sma_val
 
 
 def ema(prices, window):
@@ -109,7 +166,12 @@ def ema(prices, window):
     ema_val: Series or DataFrame
         the exponential moving average of the prices in the given window
     """
-    return pd.ewma(prices, span=window)
+    ema_val = pd.ewma(prices, span=window)
+    if isinstance(ema_val, pd.Series):
+        ema_val = ema_val.to_frame()
+
+    ema_val.rename(columns={ema_val.columns[-1]:"EMA{}".format(window)}, inplace=True)
+    return ema_val
 
 
 def bollinger_bands(prices):
@@ -154,8 +216,8 @@ def macd(prices):
     """
     ema12 = ema(prices, 12)
     ema26 = ema(prices, 26)
-    macd_val = ema12 - ema26
-    signal = ema(macd_val, 9)
+    macd_val = ema12.iloc[:, 0] - ema26.iloc[:, 0]
+    signal = ema(macd_val, 9).iloc[:, 0]
     histgram = macd_val - signal
     return macd_val, signal, histgram
 
@@ -181,6 +243,8 @@ def rsi(prices, window=14):
     data = pd.rolling_mean(data, window)  # average daily gain and lose
     rs = data.iloc[:, 1] / data.iloc[:,2] * -1
     rsi_val = 100 - 100 / (1 + rs)
+    rsi_val = rsi_val.to_frame()
+    rsi_val.rename(columns={rsi_val.columns[-1]:"RSI"}, inplace=True)
     return rsi_val
 
 
@@ -204,7 +268,9 @@ def cmf(prices):
     mfv = mfm * prices['Volume']
     mfv = pd.rolling_sum(mfv, 20)
     volumes = pd.rolling_sum(prices['Volume'], 20)
-    return (mfv/volumes).to_frame()
+    cmf_val = (mfv/volumes).to_frame()
+    cmf_val.rename(columns={cmf_val.columns[-1]:"CMF"}, inplace=True)
+    return cmf_val
 
 
 def mfi(prices):
@@ -235,4 +301,6 @@ def mfi(prices):
 
     mfr = pd.rolling_sum(prmf, 14)/pd.rolling_sum(nrmf, 14)
     mfi_val = 100 - 100. / (1 + mfr)
-    return mfi_val.to_frame()
+    mfi_val = mfi_val.to_frame()
+    mfi_val.rename(columns={mfi_val.columns[-1]:"MFI"}, inplace=True)
+    return mfi_val

@@ -111,4 +111,5 @@ class QLearner(object):
         keys = self.table.keys()
         keys = np.sort(keys)
         for key in keys:
-            print key, " - ", self.get_q_element(key)["q_vals"]
+            qs = self.get_q_element(key)
+            print key, " - ", qs["q_vals"], " - ", qs["epsilon"]
