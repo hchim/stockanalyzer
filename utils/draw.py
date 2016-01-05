@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
-import pandas as pd
+from matplotlib.lines import Line2D
+from matplotlib.patches import Rectangle
+import matplotlib.dates as mdates
 
 from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf
 
@@ -33,7 +35,7 @@ def plot_multi_symbols(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     plt.show()
 
 
-def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Price", indicators={}, orders=None):
+def plot_single_symbol(prices, type="candlestick", title="Stock Prices", xlabel="Date", ylabel="Price", indicators={}, orders=None):
     """
     Plot the stock prices with indicators and order signals.
 
@@ -41,6 +43,8 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     ----------
     prices: DataFrame
         prices of the symbols, that in clude [Open, High, Low, Close, Volume]
+    type: string
+        type of the price line, could be "candlestick" or "line"
     title: string
         the title of the figure
     xlabel: string
@@ -71,7 +75,10 @@ def plot_single_symbol(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     # setup figure
 
     # draw price
-    close_prices.plot(label="Price", ax=ax)
+    if type == "candlestick":
+        plot_candlestick(ax, prices)
+    else:
+        close_prices.plot(label="Price", ax=ax, grid=True)
 
     ax.set_title(title)
     ax.set_xlabel(xlabel)
@@ -190,6 +197,7 @@ def plot_mfi(ax, prices):
     ax.set_ylabel('MFI')
     ax.legend_ = None
 
+
 def plot_volume(ax, volums):
     volums.plot(label="Volume", ax=ax)
     ax.set_ylabel('Volume')
@@ -204,3 +212,53 @@ def plot_scatter(data, beta, alpha, y_symbol, x_symbol = "SPY"):
     data.plot(kind='scatter', x=x_symbol, y=y_symbol) # draw scatter figure
     plt.plot(data[x_symbol], beta*data[x_symbol] + alpha, '-', color='r')
     plt.show()
+
+
+def plot_candlestick(ax, prices, width=0.5, colorup='red', colordown='green', alpha=0.8):
+    offset = width / 2.0
+    line_width = width * 2
+
+    for date in prices.index:
+        p = prices.loc[date]
+        open = p["Open"]
+        close = p["Close"]
+        high = p["High"]
+        low = p["Low"]
+
+        box_high = max(open, close)
+        box_low = min(open, close)
+        height = box_high - box_low
+
+        if close >= open:
+            color = colorup
+        else:
+            color = colordown
+
+        vline_low = Line2D(
+            xdata=(date, date), ydata=(low, box_low),
+            color = 'black',
+            linewidth=line_width,
+            antialiased=True,
+        )
+
+        vline_high = Line2D(
+            xdata=(date, date), ydata=(box_high, high),
+            color = 'black',
+            linewidth=line_width,
+            antialiased=True,
+        )
+
+        rect = Rectangle(
+            xy = (mdates.date2num(date) - offset, box_low),
+            width = width,
+            height = height,
+            facecolor = color,
+            edgecolor = color,
+        )
+
+        rect.set_alpha(alpha)
+        ax.add_line(vline_low)
+        ax.add_line(vline_high)
+        ax.add_patch(rect)
+
+    ax.autoscale_view()

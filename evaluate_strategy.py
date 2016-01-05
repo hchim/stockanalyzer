@@ -45,5 +45,5 @@ def evaluate_symbol(strategy, symbol, startdate, enddate):
 if __name__ == "__main__":
     # evaluate_BB()
     # evaluate_CMF()
-    evaluate_SMA13()
-    # evaluate_symbol(SMA13Strategy(), "GOOG", "2015-01-01", "2015-12-31")
+    # evaluate_SMA13()
+    evaluate_symbol(SMA13Strategy(), "AAPL", "2015-01-01", "2015-12-31")
