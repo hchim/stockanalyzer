@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
-import matplotlib.dates as mdates
 
 from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf
 
@@ -35,7 +34,7 @@ def plot_multi_symbols(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     plt.show()
 
 
-def plot_single_symbol(prices, type="candlestick", title="Stock Prices", xlabel="Date", ylabel="Price", indicators={}, orders=None):
+def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None):
     """
     Plot the stock prices with indicators and order signals.
 
@@ -45,12 +44,6 @@ def plot_single_symbol(prices, type="candlestick", title="Stock Prices", xlabel=
         prices of the symbols, that in clude [Open, High, Low, Close, Volume]
     type: string
         type of the price line, could be "candlestick" or "line"
-    title: string
-        the title of the figure
-    xlabel: string
-        the x axis of the figure
-    ylabel: string
-        the y axis of the figure
     indicators: dict
         It contain the indicators to draw, the values of the dict are the parameters
         of the indicator. The parameters of each indicator are shown as follows:
@@ -71,24 +64,26 @@ def plot_single_symbol(prices, type="candlestick", title="Stock Prices", xlabel=
     if subfigure_number > 0:
         ax = axarr[0]
     figure_index = 1
+    indices = range(len(prices))
 
     # setup figure
+    figure.tight_layout()
+    plot_xticks(prices.index, indices)
 
     # draw price
     if type == "candlestick":
-        plot_candlestick(ax, prices)
+        plot_candlestick(ax, prices, width=0.5)
     else:
-        close_prices.plot(label="Price", ax=ax, grid=True)
+        ax.plot(range(len(prices)), close_prices)
 
-    ax.set_title(title)
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_ylabel("Price")
+    ax.set_xlim([0, len(close_prices) + 5])
+    ax.grid(True)
 
     # plot indicators
     for indicator in indicators.keys():
         if indicator == "VOLUME":
-            volumes = prices['Volume'] * prices['Close']
-            plot_volume(axarr[figure_index], volumes)
+            plot_volume(axarr[figure_index], prices)
             figure_index += 1
         elif indicator == 'BB':
             plot_bollinger_band(ax, close_prices)
@@ -113,24 +108,46 @@ def plot_single_symbol(prices, type="candlestick", title="Stock Prices", xlabel=
 
     # plot orders
     if orders is not None:
-        plot_orders(ax, orders, close_prices)
+        plot_orders(ax, orders, prices)
 
     plt.show()
 
 
+def plot_xticks(dates, indices):
+    date_strs = [""]
+    new_ind = [0]
+    pre_month = dates[0].month
+    for i in indices:
+        if dates[i].month != pre_month:
+            date_strs.append(dates[i].strftime("%b"))
+            new_ind.append(i)
+            pre_month = dates[i].month
+    plt.xticks(new_ind, date_strs)
+
+
 def plot_bollinger_band(ax, prices):
     middle, upper, lower = bollinger_bands(prices)
-    middle.plot(label='Rolling mean', ax=ax)
-    upper.plot(label='Upper band', ax=ax)
-    lower.plot(label='Lower band', ax=ax)
+    indices = range(len(prices))
+    ax.plot(indices, middle, lw=0.5)
+    ax.plot(indices, upper, lw=0.5)
+    ax.plot(indices, lower, lw=0.5)
 
 
 def plot_macd(ax, prices):
     macd_val, signal, histogram = macd(prices)
+    indices = range(len(prices))
+    for i in indices:
+        line = Line2D(
+            xdata=(i, i), ydata=(0, histogram.ix[i]),
+            color = 'red',
+            linewidth=1,
+            antialiased=True,
+        )
+        ax.add_line(line)
 
-    ax.fill_between(histogram.index, 0, histogram, alpha=0.5)
-    macd_val.plot(label='MACD', ax=ax)
-    signal.plot(label='Signal', ax=ax)
+    ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
+    ax.plot(indices, macd_val, lw=0.5)
+    ax.plot(indices, signal, lw=0.5)
     ax.set_ylabel('MACD')
 
 
@@ -144,46 +161,50 @@ def plot_orders(ax, orders, prices):
     orders: DataFrame
     prices: DataFrame
     """
+    dates = prices.index.tolist()
     for i in range(len(orders)):
         date = orders.loc[i, 'Date']
         operate = orders.loc[i, 'Order']
-        price = prices.loc[date]
+        ind = dates.index(date)
 
         if operate == 'BUY':
-            ax.plot(date, price, '^', color='green')
+            price = prices.loc[date, 'Low']
+            ax.plot(ind, price, '^', color='green')
         else:
-            ax.plot(date, price, 'v', color='red')
+            price = prices.loc[date, 'High']
+            ax.plot(ind, price, 'v', color='red')
 
 
 def plot_sma(ax, prices, window):
     sma_val = sma(prices, window)
-    sma_val.plot(label="SMA{}".format(window), ax=ax)
+    ax.plot(range(len(sma_val)), sma_val, lw=0.5)
 
 
 def plot_ema(ax, prices, window):
-    sma_val = sma(prices, window)
-    sma_val.plot(label="EMA{}".format(window), ax=ax)
+    ema_val = ema(prices, window)
+    ax.plot(range(len(ema_val)), ema_val, lw=0.5)
 
 
 def plot_rsi(ax, prices, params):
     if not params:
         window = 14
     else:
-        window = params['windows']
+        window = params['window']
 
     rsi_val = rsi(prices, window)
-
-    rsi_val.plot(label='RSI', ax=ax)
-    ax.axhline(70, color="red")
-    ax.axhline(30, color="green")
+    ax.plot(range(len(rsi_val)), rsi_val, lw=0.5)
+    ax.axhline(70, color="red", ls="--", alpha=0.5, lw=0.5)
+    ax.axhline(30, color="green", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylabel('RSI')
+    ax.set_ylim([0, 100])
+    ax.legend_ = None
 
 
 def plot_cmf(ax, prices):
     cmf_val = cmf(prices)
 
-    cmf_val.plot(label='CMF', ax=ax)
-    ax.axhline(0, color="black")
+    ax.plot(range(len(cmf_val)), cmf_val, lw=0.5)
+    ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylabel('CMF')
     ax.legend_ = None
 
@@ -191,15 +212,36 @@ def plot_cmf(ax, prices):
 def plot_mfi(ax, prices):
     mfi_val = mfi(prices)
 
-    mfi_val.plot(label='MFI', ax=ax)
-    ax.axhline(80, color="red")
-    ax.axhline(20, color="green")
+    ax.plot(range(len(mfi_val)), mfi_val, lw=0.5)
+    ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
+    ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
+    ax.set_ylim([0, 100])
     ax.set_ylabel('MFI')
     ax.legend_ = None
 
 
-def plot_volume(ax, volums):
-    volums.plot(label="Volume", ax=ax)
+def plot_volume(ax, prices, width=0.6):
+    for i in range(len(prices)):
+        p = prices.iloc[i, :]
+        open = p["Open"]
+        close = p["Close"]
+        volume = p["Volume"]
+
+        if close >= open:
+            color = "red"
+        else:
+            color = "green"
+
+        rect = Rectangle(
+            xy = (i - width/2, 0),
+            width = width,
+            height = volume,
+            facecolor = color,
+            edgecolor = color,
+        )
+        rect.set_alpha(0.5)
+        ax.add_patch(rect)
+    ax.set_ylim([0, prices["Volume"].max() * 1.25])
     ax.set_ylabel('Volume')
 
 
@@ -218,8 +260,8 @@ def plot_candlestick(ax, prices, width=0.5, colorup='red', colordown='green', al
     offset = width / 2.0
     line_width = width * 2
 
-    for date in prices.index:
-        p = prices.loc[date]
+    for i in range(len(prices.index)):
+        p = prices.iloc[i, :]
         open = p["Open"]
         close = p["Close"]
         high = p["High"]
@@ -235,21 +277,21 @@ def plot_candlestick(ax, prices, width=0.5, colorup='red', colordown='green', al
             color = colordown
 
         vline_low = Line2D(
-            xdata=(date, date), ydata=(low, box_low),
+            xdata=(i, i), ydata=(low, box_low),
             color = 'black',
             linewidth=line_width,
             antialiased=True,
         )
 
         vline_high = Line2D(
-            xdata=(date, date), ydata=(box_high, high),
+            xdata=(i, i), ydata=(box_high, high),
             color = 'black',
             linewidth=line_width,
             antialiased=True,
         )
 
         rect = Rectangle(
-            xy = (mdates.date2num(date) - offset, box_low),
+            xy = (i - offset, box_low),
             width = width,
             height = height,
             facecolor = color,

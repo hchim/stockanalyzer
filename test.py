@@ -24,17 +24,18 @@ def test_webdata_multiple():
 
 
 def test_webdata_single():
-    startdate = '2015-05-15'
+    startdate = '2015-08-15'
     enddate = '2015-12-23'
     prices = get_data_of_symbol('AAPL', startdate, enddate, fill_empty=False)
     plot_single_symbol(prices, indicators={
         "VOLUME" : None,
-        # "BB" : None,
-        # "MACD" : None,
+        "BB" : None,
+        "MACD" : None,
         "SMA5" : None,
-        # "RSI" : None,
-        # "MFI" : None,
-        # "CMF" : None,
+        "EMA5" : None,
+        "RSI" : None,
+        "MFI" : None,
+        "CMF" : None,
     })
 
 
