@@ -68,6 +68,7 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None):
 
     # setup figure
     figure.tight_layout()
+    figure.subplots_adjust(wspace=0, hspace=0.2)
     plot_xticks(prices.index, indices)
 
     # draw price
@@ -149,7 +150,7 @@ def plot_macd(ax, prices):
     ax.plot(indices, macd_val, lw=0.5)
     ax.plot(indices, signal, lw=0.5)
     ax.set_ylabel('MACD')
-
+    ax.grid(b=True, axis='x')
 
 def plot_orders(ax, orders, prices):
     """
@@ -198,6 +199,7 @@ def plot_rsi(ax, prices, params):
     ax.set_ylabel('RSI')
     ax.set_ylim([0, 100])
     ax.legend_ = None
+    ax.grid(b=True, axis='x')
 
 
 def plot_cmf(ax, prices):
@@ -207,6 +209,7 @@ def plot_cmf(ax, prices):
     ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylabel('CMF')
     ax.legend_ = None
+    ax.grid(b=True, axis='x')
 
 
 def plot_mfi(ax, prices):
@@ -218,6 +221,7 @@ def plot_mfi(ax, prices):
     ax.set_ylim([0, 100])
     ax.set_ylabel('MFI')
     ax.legend_ = None
+    ax.grid(b=True, axis='x')
 
 
 def plot_volume(ax, prices, width=0.6):
@@ -243,6 +247,7 @@ def plot_volume(ax, prices, width=0.6):
         ax.add_patch(rect)
     ax.set_ylim([0, prices["Volume"].max() * 1.25])
     ax.set_ylabel('Volume')
+    ax.grid(b=True, axis='x')
 
 
 def plot_histogram(data, bins=20):
