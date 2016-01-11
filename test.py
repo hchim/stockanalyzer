@@ -29,14 +29,16 @@ def test_webdata_single():
     enddate = '2015-12-23'
     prices = get_data_of_symbol('AAPL', startdate, enddate, fill_empty=False)
     plot_single_symbol(prices, indicators={
-        "VOLUME" : None,
-        "BB" : None,
-        "MACD" : None,
-        "SMA5" : None,
-        "EMA5" : None,
-        "RSI" : None,
-        "MFI" : None,
-        "CMF" : None,
+        # "VOLUME" : None,
+        # "BB" : None,
+        # "MACD" : None,
+        # "SMA5" : None,
+        # "EMA5" : None,
+        # "RSI" : None,
+        # "MFI" : None,
+        # "CMF" : None,
+        "KDJ" : {"window":14},
+        "STOCH" : {"windows": [13, 3, 3]},
     })
 
 
@@ -212,7 +214,7 @@ def test_nbayes_learner():
 
 
 if __name__ == "__main__":
-    # test_webdata_single()
+    test_webdata_single()
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
@@ -221,4 +223,4 @@ if __name__ == "__main__":
     # test_strategy()
     # test_discritized_indicators()
     # test_qstrategy()
-    test_nbayes_learner()
+    # test_nbayes_learner()

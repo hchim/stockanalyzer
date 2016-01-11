@@ -304,3 +304,83 @@ def mfi(prices):
     mfi_val = mfi_val.to_frame()
     mfi_val.rename(columns={mfi_val.columns[-1]:"MFI"}, inplace=True)
     return mfi_val
+
+
+def kdj(prices, params={"window": 9}):
+    """
+    Calculate KDJ indicator:
+    RSV = (Ct - Ln) / (Hn - Ln) * 100
+    K = pre_k * 2 / 3 + RSV / 3
+    D = pre_d * 2 / 3 + K / 3
+    J = 3 * D - 2 * K
+
+    Parameters
+    ----------
+    prices: DataFrame
+        Includes the open, close, high, low and volume.
+    params: dict
+
+    Returns
+    ----------
+    kdj_val: DataFrame
+    """
+    window = params["window"]
+    close = prices["Close"]
+    high = prices["High"]
+    low = prices["Low"]
+    kdj_val = []
+    pre_kd = [50.0, 50.0]
+
+    for i in range(len(prices.index)):
+        if i < window:
+            kdj_val.append((np.nan, np.nan, np.nan))
+        else:
+            hn = high[i - window:i].max()
+            ln = low[i - window:i].min()
+            rsv = (close.iloc[i] - ln) * 100.0 / (hn - ln)
+            k = pre_kd[0] * 2.0 / 3 + rsv / 3
+            d = pre_kd[1] * 2.0 / 3 + k / 3
+            j = 3 * d - 2 * k
+            pre_kd = [k, d]
+            kdj_val.append((k, d, j))
+
+    return pd.DataFrame(kdj_val, index=prices.index, columns=["K", "D", "J"])
+
+
+def stoch(prices, params={"windows": [14, 3, 3]}):
+    """
+    RSV = (Ct - Ln) / (Hn - Ln) * 100
+    K = sma(RSV, params["windows"][1])
+    D = sma(K, params["windows"][2])
+
+    Parameters
+    ----------
+    prices: DataFrame
+        Includes the open, close, high, low and volume.
+    params: dict
+
+    Returns
+    ----------
+    kd_val: DataFrame
+    """
+    windows = params["windows"]
+    close = prices["Close"]
+    high = prices["High"]
+    low = prices["Low"]
+    kd = []
+
+    for i in range(len(prices.index)):
+        if i < windows[0]:
+            kd.append((np.nan, np.nan))
+        else:
+            hn = high[i - windows[0]:i].max()
+            ln = low[i - windows[0]:i].min()
+            k = (close.iloc[i] - ln) * 100.0 / (hn - ln)
+            kd.append((k, np.nan))
+
+    kd = pd.DataFrame(kd, index=prices.index, columns=["K", "D"])
+    if windows[1] > 1:
+        kd["K"] = pd.rolling_mean(kd["K"], window=windows[1])
+    kd["D"] = pd.rolling_mean(kd["K"], window=windows[2])
+
+    return kd

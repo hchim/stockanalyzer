@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
-from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf
+from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch
 
 
 def normalize_data(df):
@@ -57,7 +57,7 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None):
 
     close_prices = prices['Close']
 
-    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF"]) # the set of indicators that must be draw in a subfigure
+    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH"]) # the set of indicators that must be draw in a subfigure
     subfigure_number = len(subfigure_indicator_set.intersection(set(indicators.keys())))
     figure, axarr = plt.subplots(subfigure_number + 1, sharex=True)
     ax = axarr    # Axes of the first subfigure
@@ -105,6 +105,12 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None):
             figure_index += 1
         elif indicator == "MFI":
             plot_mfi(axarr[figure_index], prices)
+            figure_index += 1
+        elif indicator == 'KDJ':
+            plot_kdj(axarr[figure_index], prices, indicators[indicator])
+            figure_index += 1
+        elif indicator == 'STOCH':
+            plot_stoch(axarr[figure_index], prices, indicators[indicator])
             figure_index += 1
 
     # plot orders
@@ -220,6 +226,28 @@ def plot_mfi(ax, prices):
     ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylim([0, 100])
     ax.set_ylabel('MFI')
+    ax.legend_ = None
+    ax.grid(b=True, axis='x')
+
+
+def plot_kdj(ax, prices, params):
+    kdj_val = kdj(prices, params)
+    indices = range(len(kdj_val))
+    ax.plot(indices, kdj_val, lw=0.5)
+    ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
+    ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
+    ax.set_ylabel('KDJ')
+    ax.legend_ = None
+    ax.grid(b=True, axis='x')
+
+
+def plot_stoch(ax, prices, params):
+    kd_val = stoch(prices, params)
+    indices = range(len(kd_val))
+    ax.plot(indices, kd_val, lw=0.5)
+    ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
+    ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
+    ax.set_ylabel('STOCH')
     ax.legend_ = None
     ax.grid(b=True, axis='x')
 
