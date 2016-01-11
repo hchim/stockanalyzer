@@ -13,6 +13,7 @@ from learner.KNNLearner import KNNLearner
 from analysis.indicators import discritized_indicators
 from strategy.QStrategy import QStrategy
 from simulator.TradeSimulator import TradeSimulator
+from learner.NaiveBayesLearner import NaiveBayesLearner
 
 
 def test_webdata_multiple():
@@ -192,8 +193,26 @@ def test_qstrategy():
     # print predict[predict < 2]
 
 
+def test_nbayes_learner():
+    learner = NaiveBayesLearner()
+    datax = [(0, 0),
+             (0, 1),
+             (0, 2),
+             (1, 2),
+             (1, 1),
+             (1, 0),
+             (1, 0),
+             (1, 1),
+             (1, 1)]
+    datay = [1, 0, 1, 0, 1, 0, 1, 0, 1]
+    dates = pd.date_range("2016-01-01", "2016-01-09")
+    datax = pd.DataFrame(datax, index=dates, columns=["A0", "A1"])
+    learner.train(datax, pd.DataFrame(datay, index=dates, columns=["Y"]))
+    print learner.query(datax)
+
+
 if __name__ == "__main__":
-    test_webdata_single()
+    # test_webdata_single()
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
@@ -202,3 +221,4 @@ if __name__ == "__main__":
     # test_strategy()
     # test_discritized_indicators()
     # test_qstrategy()
+    test_nbayes_learner()
