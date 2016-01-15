@@ -200,15 +200,14 @@ def test_nbayes_learner():
     learner = NaiveBayesLearner()
     datax = [(0, 0),
              (0, 1),
+             (0, 1),
              (0, 2),
+             (1, 0),
+             (1, 1),
              (1, 2),
-             (1, 1),
-             (1, 0),
-             (1, 0),
-             (1, 1),
-             (1, 1)]
-    datay = [1, 0, 1, 0, 1, 0, 1, 0, 1]
-    dates = pd.date_range("2016-01-01", "2016-01-09")
+             (1, 0)]
+    datay = [1, 0, 1, 0, 1, 0, 1, 0]
+    dates = pd.date_range("2016-01-01", "2016-01-08")
     datax = pd.DataFrame(datax, index=dates, columns=["A0", "A1"])
     learner.train(datax, pd.DataFrame(datay, index=dates, columns=["Y"]))
     print learner.query(datax)
@@ -233,3 +232,5 @@ if __name__ == "__main__":
     # test_qstrategy()
     # test_nbayes_learner()
     test_candlestick_patterns()
+    # test_nbayes_learner()
+
