@@ -14,7 +14,8 @@ from analysis.indicators import discritized_indicators
 from strategy.QStrategy import QStrategy
 from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
-
+from analysis.candlestick_pattern import candlestick_patterns
+from analysis.candlestick_pattern import PATTERNS
 
 def test_webdata_multiple():
     startdate = '2015-01-01'
@@ -213,8 +214,15 @@ def test_nbayes_learner():
     print learner.query(datax)
 
 
+def test_candlestick_patterns():
+    startdate = '2015-08-15'
+    enddate = '2015-12-23'
+    prices = get_data_of_symbol('AAPL', startdate, enddate, fill_empty=False)
+    plot_single_symbol(prices, patterns=PATTERNS.keys())
+
+
 if __name__ == "__main__":
-    test_webdata_single()
+    # test_webdata_single()
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
@@ -224,3 +232,4 @@ if __name__ == "__main__":
     # test_discritized_indicators()
     # test_qstrategy()
     # test_nbayes_learner()
+    test_candlestick_patterns()

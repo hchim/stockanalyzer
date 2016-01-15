@@ -3,6 +3,8 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
 from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch
+from analysis.candlestick_pattern import candlestick_patterns
+from analysis.candlestick_pattern import PATTERNS
 
 
 def normalize_data(df):
@@ -34,7 +36,7 @@ def plot_multi_symbols(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     plt.show()
 
 
-def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None):
+def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, patterns=None):
     """
     Plot the stock prices with indicators and order signals.
 
@@ -74,6 +76,8 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None):
     # draw price
     if type == "candlestick":
         plot_candlestick(ax, prices, width=0.5)
+        if patterns is not None:
+            plot_candlestick_patterns(ax, prices, patterns)
     else:
         ax.plot(range(len(prices)), close_prices)
 
@@ -246,6 +250,7 @@ def plot_stoch(ax, prices, params):
     indices = range(len(kd_val))
     ax.plot(indices, kd_val, lw=0.5)
     ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
+    ax.axhline(50, color="black", ls="--", alpha=0.5, lw=0.5)
     ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylabel('STOCH')
     ax.legend_ = None
@@ -337,3 +342,37 @@ def plot_candlestick(ax, prices, width=0.5, colorup='red', colordown='green', al
         ax.add_patch(rect)
 
     ax.autoscale_view()
+
+
+def plot_candlestick_patterns(ax, prices, patterns, candle_width=0.5):
+    pattern_signals = candlestick_patterns(prices, patterns)
+    offset = candle_width/2
+    for i in range(len(prices.index)):
+        for j in range(len(patterns)):
+            val = pattern_signals.iloc[i, j]
+            if val == 0:
+                continue
+
+            pattern = PATTERNS[patterns[j]]
+            # print i, pattern["name"], val
+            if val < 0:
+                color = "green"
+            else:
+                color = "red"
+
+            start_ind = i - pattern["candles"] + 1
+            included_prices = prices.iloc[start_ind:i+1, :]
+            max = included_prices["High"].max()
+            min = included_prices["Low"].min()
+            rect = Rectangle(
+                xy = (start_ind - offset, min),
+                width = pattern["candles"],
+                height = max - min,
+                fill=False,
+                edgecolor=color
+            )
+
+            # TODO Add pattern name
+            # ax.annotate(pattern["name"], res.xy, ,)
+
+            ax.add_patch(rect)

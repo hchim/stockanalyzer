@@ -31,7 +31,10 @@ After that you can install packages to this virtual environment, these packages 
 $pip install pandas
 $pip install matplotlib
 $pip install pandas_datareader
+$pip install ta-lib
 ```
+
+**Notes**: [Ta-lib](https://github.com/mrjbq7/ta-lib) is hard to install, you should install the dependent lib first: `brew install ta-lib`.
 
 To deactivate the environment:
 
