@@ -354,7 +354,6 @@ def plot_candlestick_patterns(ax, prices, patterns, candle_width=0.5):
                 continue
 
             pattern = PATTERNS[patterns[j]]
-            # print i, pattern["name"], val
             if val < 0:
                 color = "green"
             else:

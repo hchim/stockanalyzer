@@ -15,7 +15,7 @@ from strategy.QStrategy import QStrategy
 from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
 from analysis.candlestick_pattern import candlestick_patterns
-from analysis.candlestick_pattern import GOOD_PATTERNS
+from analysis.candlestick_pattern import PATTERNS
 
 def test_webdata_multiple():
     startdate = '2015-01-01'
@@ -214,10 +214,10 @@ def test_nbayes_learner():
 
 
 def test_candlestick_patterns():
-    startdate = '2015-10-15'
+    startdate = '2015-12-15'
     enddate = '2016-01-15'
-    prices = get_data_of_symbol('AMZN', startdate, enddate, fill_empty=False)
-    plot_single_symbol(prices, patterns=GOOD_PATTERNS)
+    prices = get_data_of_symbol('JMEI', startdate, enddate, fill_empty=False)
+    plot_single_symbol(prices, patterns=PATTERNS.keys())
 
 
 if __name__ == "__main__":
