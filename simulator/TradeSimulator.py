@@ -84,6 +84,9 @@ class TradeSimulator(object):
         symbols = list(set(orders['Symbol']))
         if prices is None:
             prices = get_close_of_symbols(symbols, start_date, end_date, add_spy=True) # add SPY so as to remove no-trade days
+            if prices is None:
+                return None
+
             prices.drop('SPY', axis=1, inplace=True)       # remove SPY
 
         dates = prices.index                           # update dates
