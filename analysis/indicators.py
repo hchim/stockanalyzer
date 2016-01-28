@@ -306,12 +306,12 @@ def mfi(prices):
     return mfi_val
 
 
-def kdj(prices, params={"window": 9}):
+def kdj(prices, params={"window": [9, 3, 3]}):
     """
     Calculate KDJ indicator:
     RSV = (Ct - Ln) / (Hn - Ln) * 100
-    K = pre_k * 2 / 3 + RSV / 3
-    D = pre_d * 2 / 3 + K / 3
+    K = sma3(RSV)
+    D = sma3(K)
     J = 3 * D - 2 * K
 
     Parameters
@@ -328,21 +328,22 @@ def kdj(prices, params={"window": 9}):
     close = prices["Close"]
     high = prices["High"]
     low = prices["Low"]
-    kdj_val = []
-    pre_kd = [50.0, 50.0]
+    rsv_val = []
 
     for i in range(len(prices.index)):
-        if i < window:
-            kdj_val.append((np.nan, np.nan, np.nan))
+        if i < window[0]:
+            rsv_val.append(np.nan)
         else:
-            hn = high[i - window:i].max()
-            ln = low[i - window:i].min()
+            hn = high[i - window[0]:i].max()
+            ln = low[i - window[0]:i].min()
             rsv = (close.iloc[i] - ln) * 100.0 / (hn - ln)
-            k = pre_kd[0] * 2.0 / 3 + rsv / 3
-            d = pre_kd[1] * 2.0 / 3 + k / 3
-            j = 3 * d - 2 * k
-            pre_kd = [k, d]
-            kdj_val.append((k, d, j))
+            rsv_val.append(rsv)
+
+    rsv = np.array(rsv_val)
+    k = pd.rolling_mean(rsv, window[1])
+    d = pd.rolling_mean(k, window[2])
+    j = 3 * d - 2 * k
+    kdj_val = np.column_stack((k, d, j))
 
     return pd.DataFrame(kdj_val, index=prices.index, columns=["K", "D", "J"])
 

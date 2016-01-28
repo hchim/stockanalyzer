@@ -38,8 +38,8 @@ def test_webdata_single():
         # "RSI" : None,
         # "MFI" : None,
         # "CMF" : None,
-        "KDJ" : {"window":14},
-        "STOCH" : {"windows": [13, 3, 3]},
+        "KDJ" : {"window":[9, 3, 3]},
+        "STOCH" : {"windows": [9, 3, 3]},
     })
 
 
@@ -221,7 +221,7 @@ def test_candlestick_patterns():
 
 
 if __name__ == "__main__":
-    # test_webdata_single()
+    test_webdata_single()
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
@@ -231,6 +231,6 @@ if __name__ == "__main__":
     # test_discritized_indicators()
     # test_qstrategy()
     # test_nbayes_learner()
-    test_candlestick_patterns()
+    # test_candlestick_patterns()
     # test_nbayes_learner()
 
