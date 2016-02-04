@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import math
+import utils.csvdata as csvdata
 
 from utils.webdata import get_data_of_symbol, get_close_of_symbols
 from utils.draw import plot_single_symbol, plot_multi_symbols, normalize_data, plot_histogram, plot_scatter
@@ -220,8 +221,13 @@ def test_candlestick_patterns():
     plot_single_symbol(prices, patterns=PATTERNS.keys())
 
 
+def test_csvdata():
+    symbols = csvdata.get_available_symbols()
+    csvdata.get_data_of_symbol(symbols[0], "2016-01-01", "2016-01-08", False)
+
+
 if __name__ == "__main__":
-    test_webdata_single()
+    # test_webdata_single()
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
@@ -233,4 +239,4 @@ if __name__ == "__main__":
     # test_nbayes_learner()
     # test_candlestick_patterns()
     # test_nbayes_learner()
-
+    test_csvdata()

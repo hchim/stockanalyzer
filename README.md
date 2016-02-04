@@ -47,3 +47,6 @@ $deactivate
 Open "Project Structure", you can add a new SDK by selecting the `python` file under the `bin` directory of the virtual
 environment directory. The project will use this virtual environment to execute the python scripts.
 
+##Download data
+
+[Download](https://dl.dropboxusercontent.com/u/10880933/prices.zip) symbol prices and unzip the downloaded file in the `data/` directory.

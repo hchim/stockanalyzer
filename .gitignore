@@ -61,6 +61,7 @@ target/
 
 #project output
 out/
+data/prices/
 
 #intellij files
 .idea/

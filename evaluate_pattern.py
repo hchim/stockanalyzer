@@ -1,5 +1,6 @@
 from analysis.candlestick_pattern import candlestick_patterns, PATTERNS
-from utils.webdata import get_data_of_symbol
+# from utils.webdata import get_data_of_symbol
+from utils.csvdata import get_data_of_symbol, get_available_symbols
 from datetime import date
 
 import numpy as np
@@ -102,5 +103,6 @@ def evaluate_pattern(symbol):
 
 
 if __name__ == "__main__":
-    symbols = get_symbols("./data/NYSE_symbols.csv")
+    # symbols = get_symbols("./data/NYSE_symbols.csv")
+    symbols = get_available_symbols()
     analyze_symbols(symbols)
