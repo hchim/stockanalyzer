@@ -72,6 +72,15 @@ class BaseEvaluator(object):
     def dump_report(self):
         print self.report
 
+
+    def ts_print(self, obj):
+        """
+        Thread safe print, used in the evaluate and real_evaluate methods or the methods they invoked.
+        """
+        self.thread_lock.acquire()
+        print obj
+        self.thread_lock.release()
+
 class WorkerThread(th.Thread):
 
     def __init__(self, name, symbols, evaluator):
