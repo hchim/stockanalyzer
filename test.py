@@ -17,6 +17,7 @@ from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
 from analysis.candlestick_pattern import candlestick_patterns
 from analysis.candlestick_pattern import PATTERNS
+from simulator.ReverseEvaluator import KDJReverseEvaluator
 
 def test_webdata_multiple():
     startdate = '2015-01-01'
@@ -226,6 +227,12 @@ def test_csvdata():
     csvdata.get_data_of_symbol(symbols[0], "2016-01-01", "2016-01-08", False)
 
 
+def test_evaluator():
+    evaluator = KDJReverseEvaluator('2014-01-01', '2016-02-01')
+    evaluator.start()
+    evaluator.dump_report()
+
+
 if __name__ == "__main__":
     # test_webdata_single()
     # test_webdata_multiple()
@@ -239,4 +246,5 @@ if __name__ == "__main__":
     # test_nbayes_learner()
     # test_candlestick_patterns()
     # test_nbayes_learner()
-    test_csvdata()
+    # test_csvdata()
+    test_evaluator()
