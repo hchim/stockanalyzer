@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
-from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch
+from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch, adx, atr
 from analysis.candlestick_pattern import candlestick_patterns
 from analysis.candlestick_pattern import PATTERNS
 
@@ -59,7 +59,7 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
 
     close_prices = prices['Close']
 
-    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH"]) # the set of indicators that must be draw in a subfigure
+    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH", "ATR", "ADX"]) # the set of indicators that must be draw in a subfigure
     subfigure_number = len(subfigure_indicator_set.intersection(set(indicators.keys())))
     figure, axarr = plt.subplots(subfigure_number + 1, sharex=True)
     ax = axarr    # Axes of the first subfigure
@@ -87,6 +87,7 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
 
     # plot indicators
     for indicator in indicators.keys():
+        params = indicators[indicator]
         if indicator == "VOLUME":
             plot_volume(axarr[figure_index], prices)
             figure_index += 1
@@ -102,7 +103,7 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
             plot_macd(axarr[figure_index], close_prices)
             figure_index += 1
         elif indicator == 'RSI':
-            plot_rsi(axarr[figure_index], close_prices, indicators[indicator])
+            plot_rsi(axarr[figure_index], close_prices, params)
             figure_index += 1
         elif indicator == "CMF":
             plot_cmf(axarr[figure_index], prices)
@@ -111,10 +112,16 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
             plot_mfi(axarr[figure_index], prices)
             figure_index += 1
         elif indicator == 'KDJ':
-            plot_kdj(axarr[figure_index], prices, indicators[indicator])
+            plot_kdj(axarr[figure_index], prices, params)
             figure_index += 1
         elif indicator == 'STOCH':
-            plot_stoch(axarr[figure_index], prices, indicators[indicator])
+            plot_stoch(axarr[figure_index], prices, params)
+            figure_index += 1
+        elif indicator == 'ADX':
+            plot_adx(axarr[figure_index], prices, params)
+            figure_index += 1
+        elif indicator == 'ATR':
+            plot_atr(axarr[figure_index], prices, params)
             figure_index += 1
 
     # plot orders
@@ -375,3 +382,24 @@ def plot_candlestick_patterns(ax, prices, patterns, candle_width=0.5):
             # ax.annotate(pattern["name"], res.xy, ,)
 
             ax.add_patch(rect)
+
+
+def plot_adx(ax, prices, params):
+    adx_val, pdi, mdi = adx(prices, params)
+    indices = range(len(adx_val))
+    ax.plot(indices, adx_val, lw=0.5, color='black')
+    ax.plot(indices, pdi, lw=0.5, color='green')
+    ax.plot(indices, mdi, lw=0.5, color='red')
+    ax.axhline(25, color="blue", ls="--", alpha=0.5, lw=0.5)
+    ax.set_ylabel('ADX')
+    ax.legend_ = None
+    ax.grid(b=True, axis='x')
+
+
+def plot_atr(ax, prices, params):
+    atr_val = atr(prices, params)
+    indices = range(len(atr_val))
+    ax.plot(indices, atr_val, lw=0.5, color='black')
+    ax.set_ylabel('ATR')
+    ax.legend_ = None
+    ax.grid(b=True, axis='x')

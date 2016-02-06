@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 
-
 def discritizing(values, v_range, bin_num):
     """
     Discritize the values.
@@ -385,3 +384,99 @@ def stoch(prices, params={"windows": [14, 3, 3]}):
     kd["D"] = pd.rolling_mean(kd["K"], window=windows[2])
 
     return kd
+
+def __tr(prices):
+    """
+    TR is defined as the greatest of the following:
+    Method 1: Current High less the current Low
+    Method 2: Current High less the previous Close (absolute value)
+    Method 3: Current Low less the previous Close (absolute value)
+    """
+    m1 = prices['High'] - prices['Low']
+    m2 = abs(prices['High'] - prices['Close'].shift(1))
+    m3 = abs(prices['Low'] - prices['Close'].shift(1))
+
+    tr = pd.concat([m1, m2, m3], axis=1).max(axis=1)
+    tr[0] = np.nan
+    return tr
+
+
+def __wilder_smooth_1(values, window):
+    """
+    First TR14 = Sum of first 14 periods of TR1
+    Second TR14 = First TR14 - (First TR14/14) + Current TR1
+    Subsequent Values = Prior TR14 - (Prior TR14/14) + Current TR1
+    """
+    length = len(values.index)
+    smooth_val = pd.Series(np.zeros(length), index=values.index)
+    smooth_val[0:window] = np.nan
+    smooth_val[window] = np.sum(values[1:window+1].values)
+
+    for i in range(window + 1, length):
+        smooth_val[i] = (smooth_val[i-1] * (1 - 1.0 / window)) + values[i]
+    return smooth_val
+
+
+def __wilder_smooth_2(values, window):
+    """
+    First ADX14 = 14 period Average of DX
+    Second ADX14 = ((First ADX14 x 13) + Current DX Value)/14
+    Subsequent ADX14 = ((Prior ADX14 x 13) + Current DX Value)/14
+    """
+    start = window
+    length = len(values.index)
+    smooth_val = pd.Series(np.zeros(length), index=values.index)
+    smooth_val[0:start + window - 1] = np.nan
+    smooth_val[start + window - 1] = np.mean(values[start: start + window].values)
+
+    for i in range(start + window, length):
+        smooth_val[i] = (smooth_val[i-1] * (window - 1) + values[i]) / window
+    return smooth_val
+
+
+def atr(prices, params={"window":14}):
+    """
+    Current ATR = [(Prior ATR x 13) + Current TR] / 14
+    Average True Range (ATR) is an indicator that measures volatility.
+    """
+    tr = __tr(prices)
+    window = params["window"]
+    length = len(prices.index)
+    atr_val = pd.Series(np.zeros(length), index=prices.index)
+    atr_val[1] = tr[1]
+
+    for i in range(2, length):
+        atr_val[i] = (atr_val[i-1] * (window - 1) + tr[i]) / window
+    return atr_val
+
+
+def adx(prices, params={"window":14}):
+    tr = __tr(prices)
+    high = prices["High"]
+    low = prices["Low"]
+    length = len(prices.index)
+    pdm = pd.Series(np.zeros(length), index=prices.index)
+    mdm = pd.Series(np.zeros(length), index=prices.index)
+    pdm[0] = np.nan
+    mdm[0] = np.nan
+
+    for i in range(1, length):
+        up = high[i] - high[i-1]
+        down = low[i-1] - low[i]
+
+        if up > down and up > 0:
+            pdm[i] = up
+
+        if down > up and down > 0:
+            mdm[i] = down
+
+    str = __wilder_smooth_1(tr, window=params["window"])
+    spdm = __wilder_smooth_1(pdm, window=params["window"])
+    smdm = __wilder_smooth_1(mdm, window=params["window"])
+    # green line
+    pdi = spdm / str * 100
+    # red line
+    mdi = smdm / str * 100
+    dx = abs(pdi - mdi) / (pdi + mdi) * 100
+    adx_val = __wilder_smooth_2(dx, window=params["window"])
+    return adx_val, pdi, mdi

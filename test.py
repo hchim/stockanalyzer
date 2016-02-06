@@ -11,7 +11,7 @@ from analysis.normindicators import calculate_indicators
 from strategy.SLStrategy import Strategy
 from learner.BagLearner import BagLearner
 from learner.KNNLearner import KNNLearner
-from analysis.indicators import discritized_indicators
+from analysis.indicators import discritized_indicators, adx
 from strategy.QStrategy import QStrategy
 from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
@@ -29,8 +29,8 @@ def test_webdata_multiple():
 
 def test_webdata_single():
     startdate = '2015-08-15'
-    enddate = '2015-12-23'
-    prices = get_data_of_symbol('AAPL', startdate, enddate, fill_empty=False)
+    enddate = '2016-02-05'
+    prices = get_data_of_symbol('AMZN', startdate, enddate, fill_empty=False)
     plot_single_symbol(prices, indicators={
         # "VOLUME" : None,
         # "BB" : None,
@@ -40,8 +40,10 @@ def test_webdata_single():
         # "RSI" : None,
         # "MFI" : None,
         # "CMF" : None,
-        "KDJ" : {"window":[9, 3, 3]},
-        "STOCH" : {"windows": [9, 3, 3]},
+        # "KDJ" : {"window":[9, 3, 3]},
+        # "STOCH" : {"windows": [9, 3, 3]},
+        "ADX": {"window": 14},
+        "ATR": {"window": 14},
     })
 
 
@@ -244,7 +246,7 @@ def test_bbevaluator_mode2():
 
 
 if __name__ == "__main__":
-    # test_webdata_single()
+    test_webdata_single()
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
@@ -259,4 +261,4 @@ if __name__ == "__main__":
     # test_csvdata()
     # test_kdjevaluator()
     # test_bbevaluator_mode1()
-    test_bbevaluator_mode2()
+    # test_bbevaluator_mode2()
