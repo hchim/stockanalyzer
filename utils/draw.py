@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
-from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch, adx, atr
+from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch, adx, atr, cci
 from analysis.candlestick_pattern import candlestick_patterns, fractals
 from analysis.candlestick_pattern import PATTERNS
 
@@ -59,7 +59,7 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
 
     close_prices = prices['Close']
     # the set of indicators that must be draw in a subfigure
-    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH", "ATR", "ADX"])
+    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH", "ATR", "ADX", "CCI"])
     subfigure_number = len(subfigure_indicator_set.intersection(set(indicators.keys())))
     figure, axarr = plt.subplots(subfigure_number + 1, sharex=True)
     ax = axarr    # Axes of the first subfigure
@@ -125,6 +125,9 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
             figure_index += 1
         elif indicator == 'FRAC':
             plot_fractals(ax, prices)
+        elif indicator == 'CCI':
+            plot_cci(axarr[figure_index], prices, params)
+            figure_index += 1
 
     # plot orders
     if orders is not None:
@@ -421,3 +424,19 @@ def plot_fractals(ax, prices):
             ax.plot(i, high[i] + mean, 'r^')
         elif frac[i] == -1:
             ax.plot(i, low[i] - mean, 'gv')
+
+
+def plot_cci(ax, prices, params={"window": 20}):
+    cci_val = cci(prices, params)
+    indices = range(len(cci_val))
+    ax.plot(indices, cci_val, lw=0.5, color='black')
+    ax.fill_between(indices, 100, cci_val, where=cci_val>=100, facecolor='red', alpha=0.3, interpolate=True)
+    ax.fill_between(indices, -100, cci_val, where=cci_val<=-100, facecolor='green', alpha=0.3, interpolate=True)
+    ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
+    ax.axhline(100, color="green", lw=0.5)
+    ax.axhline(-100, color="red", lw=0.5)
+    ax.axhline(200, color="green", lw=0.5, ls='--')
+    ax.axhline(-200, color="red", lw=0.5, ls='--')
+    ax.set_ylabel('CCI')
+    ax.legend_ = None
+    ax.grid(b=True, axis='x')

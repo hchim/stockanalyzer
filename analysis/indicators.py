@@ -272,6 +272,10 @@ def cmf(prices):
     return cmf_val
 
 
+def __tp(prices):
+    return (prices['High'] + prices['Low'] + prices['Close']) / 3.0
+
+
 def mfi(prices):
     """
     1. Typical Price = (High + Low + Close)/3
@@ -288,7 +292,7 @@ def mfi(prices):
     ----------
     mfi_val: DataFrame
     """
-    tp = (prices['High'] + prices['Low'] + prices['Close']) / 3.0
+    tp = __tp(prices)
     rmf = tp * prices['Volume']
     prmf = rmf.copy()
     nrmf = rmf.copy()
@@ -469,3 +473,19 @@ def adx(prices, params={"window":14}):
     dx = abs(pdi - mdi) / (pdi + mdi) * 100
     adx_val = __wilder_smooth_2(dx, window=params["window"])
     return adx_val, pdi, mdi
+
+
+def cci(prices, params={"window":20}):
+    length = len(prices.index)
+    window = params["window"]
+
+    tp = __tp(prices)
+    stp = pd.rolling_mean(tp, window)
+    cci_val = pd.Series(np.zeros(length), index=prices.index)
+    cci_val[0:window-1] = np.nan
+
+    for i in range(window-1, length):
+        dev = np.sum(abs(stp[i] - tp[i-window+1:i+1])) / window
+        cci_val[i] = (tp[i]  -  stp[i]) / (0.015 * dev)
+
+    return cci_val

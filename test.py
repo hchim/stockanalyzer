@@ -40,11 +40,12 @@ def test_webdata_single():
         # "RSI" : None,
         # "MFI" : None,
         # "CMF" : None,
-        "KDJ" : {"windows": [14, 3, 3]},
+        # "KDJ" : {"windows": [14, 3, 3]},
         # "STOCH" : {"windows": [9, 3, 3]},
         # "ADX": {"window": 14},
         # "ATR": {"window": 14},
         "FRAC": None,
+        "CCI": {"window": 20},
     })
 
 
