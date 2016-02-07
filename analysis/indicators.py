@@ -305,7 +305,24 @@ def mfi(prices):
     return mfi_val
 
 
-def kdj(prices, params={"window": [9, 3, 3]}):
+def __rsv(prices, window):
+    close = prices["Close"]
+    high = prices["High"]
+    low = prices["Low"]
+    length = len(prices.index)
+
+    rsv_val = np.zeros(length)
+    rsv_val[0:window-1] = np.nan
+
+    for i in range(window-1, length):
+        hn = high[i-window+1:i+1].max()
+        ln = low[i-window+1:i+1].min()
+        rsv_val[i] = (close[i] - ln) * 100.0 / (hn - ln)
+
+    return rsv_val
+
+
+def kdj(prices, params={"windows": [9, 3, 3]}):
     """
     Calculate KDJ indicator:
     RSV = (Ct - Ln) / (Hn - Ln) * 100
@@ -323,25 +340,11 @@ def kdj(prices, params={"window": [9, 3, 3]}):
     ----------
     kdj_val: DataFrame
     """
-    window = params["window"]
-    close = prices["Close"]
-    high = prices["High"]
-    low = prices["Low"]
-    rsv_val = []
-
-    for i in range(len(prices.index)):
-        if i < window[0]:
-            rsv_val.append(np.nan)
-        else:
-            hn = high[i - window[0]:i].max()
-            ln = low[i - window[0]:i].min()
-            rsv = (close.iloc[i] - ln) * 100.0 / (hn - ln)
-            rsv_val.append(rsv)
-
-    rsv = np.array(rsv_val)
-    k = pd.rolling_mean(rsv, window[1])
-    d = pd.rolling_mean(k, window[2])
-    j = 3 * d - 2 * k
+    windows = params["windows"]
+    rsv = __rsv(prices, windows[0])
+    k = pd.rolling_mean(rsv, windows[1])
+    d = pd.rolling_mean(k, windows[2])
+    j = 3 * k - 2 * d
     kdj_val = np.column_stack((k, d, j))
 
     return pd.DataFrame(kdj_val, index=prices.index, columns=["K", "D", "J"])
@@ -364,26 +367,12 @@ def stoch(prices, params={"windows": [14, 3, 3]}):
     kd_val: DataFrame
     """
     windows = params["windows"]
-    close = prices["Close"]
-    high = prices["High"]
-    low = prices["Low"]
-    kd = []
+    rsv = __rsv(prices, windows[0])
+    k = pd.rolling_mean(rsv, windows[1])
+    d = pd.rolling_mean(k, windows[2])
+    stoch_val = np.column_stack((k, d))
 
-    for i in range(len(prices.index)):
-        if i < windows[0]:
-            kd.append((np.nan, np.nan))
-        else:
-            hn = high[i - windows[0]:i].max()
-            ln = low[i - windows[0]:i].min()
-            k = (close.iloc[i] - ln) * 100.0 / (hn - ln)
-            kd.append((k, np.nan))
-
-    kd = pd.DataFrame(kd, index=prices.index, columns=["K", "D"])
-    if windows[1] > 1:
-        kd["K"] = pd.rolling_mean(kd["K"], window=windows[1])
-    kd["D"] = pd.rolling_mean(kd["K"], window=windows[2])
-
-    return kd
+    return pd.DataFrame(stoch_val, index=prices.index, columns=["K", "D"])
 
 def __tr(prices):
     """

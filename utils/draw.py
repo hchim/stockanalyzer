@@ -3,7 +3,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
 from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch, adx, atr
-from analysis.candlestick_pattern import candlestick_patterns
+from analysis.candlestick_pattern import candlestick_patterns, fractals
 from analysis.candlestick_pattern import PATTERNS
 
 
@@ -58,8 +58,8 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
     """
 
     close_prices = prices['Close']
-
-    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH", "ATR", "ADX"]) # the set of indicators that must be draw in a subfigure
+    # the set of indicators that must be draw in a subfigure
+    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH", "ATR", "ADX"])
     subfigure_number = len(subfigure_indicator_set.intersection(set(indicators.keys())))
     figure, axarr = plt.subplots(subfigure_number + 1, sharex=True)
     ax = axarr    # Axes of the first subfigure
@@ -123,6 +123,8 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
         elif indicator == 'ATR':
             plot_atr(axarr[figure_index], prices, params)
             figure_index += 1
+        elif indicator == 'FRAC':
+            plot_fractals(ax, prices)
 
     # plot orders
     if orders is not None:
@@ -169,6 +171,7 @@ def plot_macd(ax, prices):
     ax.set_ylabel('MACD')
     ax.grid(b=True, axis='x')
 
+
 def plot_orders(ax, orders, prices):
     """
     Plot order signals
@@ -180,17 +183,19 @@ def plot_orders(ax, orders, prices):
     prices: DataFrame
     """
     dates = prices.index.tolist()
+    low = prices["Low"]
+    high = prices["High"]
+    mean = abs(high-low).mean()
+
     for i in range(len(orders)):
         date = orders.loc[i, 'Date']
         operate = orders.loc[i, 'Order']
         ind = dates.index(date)
 
         if operate == 'BUY':
-            price = prices.loc[date, 'Low']
-            ax.plot(ind, price, '^', color='green')
+            ax.plot(ind, low[ind] - mean, 'r^')
         else:
-            price = prices.loc[date, 'High']
-            ax.plot(ind, price, 'v', color='red')
+            ax.plot(ind, high[ind] + mean, 'gv')
 
 
 def plot_sma(ax, prices, window):
@@ -387,9 +392,9 @@ def plot_candlestick_patterns(ax, prices, patterns, candle_width=0.5):
 def plot_adx(ax, prices, params):
     adx_val, pdi, mdi = adx(prices, params)
     indices = range(len(adx_val))
-    ax.plot(indices, adx_val, lw=0.5, color='black')
-    ax.plot(indices, pdi, lw=0.5, color='green')
-    ax.plot(indices, mdi, lw=0.5, color='red')
+    ax.plot(indices, adx_val, color='black')
+    ax.plot(indices, pdi, lw=0.5, color='red')
+    ax.plot(indices, mdi, lw=0.5, color='green')
     ax.axhline(25, color="blue", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylabel('ADX')
     ax.legend_ = None
@@ -403,3 +408,16 @@ def plot_atr(ax, prices, params):
     ax.set_ylabel('ATR')
     ax.legend_ = None
     ax.grid(b=True, axis='x')
+
+
+def plot_fractals(ax, prices):
+    frac = fractals(prices)
+    high = prices["High"]
+    low = prices["Low"]
+    mean = abs(high-low).mean()
+
+    for i in range(2, len(frac)):
+        if frac[i] == 1:
+            ax.plot(i, high[i] + mean, 'r^')
+        elif frac[i] == -1:
+            ax.plot(i, low[i] - mean, 'gv')

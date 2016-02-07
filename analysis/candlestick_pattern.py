@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import talib
 
 PATTERNS = {
@@ -178,3 +179,18 @@ def candlestick_patterns(prices, pattern_names=[]):
     return signals
 
 
+def fractals(prices):
+    length = len(prices.index)
+    frac = pd.Series(np.zeros(length), index=prices.index)
+    if length < 5:
+        return frac
+
+    high = prices["High"]
+    low = prices["Low"]
+    for i in range(2, length - 2):
+        if high[i] > max(high[i-1], high[i-2], high[i+1], high[i+2]):
+            frac[i] = 1
+        if low[i] < min(low[i-1], low[i-2], low[i+1], low[i+2]):
+            frac[i] = -1
+
+    return frac
