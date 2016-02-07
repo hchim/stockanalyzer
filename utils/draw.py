@@ -413,17 +413,31 @@ def plot_atr(ax, prices, params):
     ax.grid(b=True, axis='x')
 
 
-def plot_fractals(ax, prices):
+def plot_fractals(ax, prices, params={"draw_breakout": True}):
     frac = fractals(prices)
     high = prices["High"]
     low = prices["Low"]
+    close = prices["Close"]
     mean = abs(high-low).mean()
 
+    pre_up = -1
+    pre_down = -1
     for i in range(2, len(frac)):
+        # check breakout
+        if params["draw_breakout"]:
+            if pre_up >= 0 and close[i] > high[pre_up]:
+                ax.plot([pre_up, i], [high[pre_up], high[pre_up]], color="red")
+                pre_up = -1 # remove repeated plot
+            elif pre_down >= 0 and close[i] < low[pre_down]:
+                ax.plot([pre_down, i], [low[pre_down], low[pre_down]], color="green")
+                pre_down = -1 # remove repeated plot
+        # draw fractals
         if frac[i] == 1:
             ax.plot(i, high[i] + mean, 'r^')
+            pre_up = i
         elif frac[i] == -1:
             ax.plot(i, low[i] - mean, 'gv')
+            pre_down = i
 
 
 def plot_cci(ax, prices, params={"window": 20}):
