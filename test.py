@@ -17,7 +17,7 @@ from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
 from analysis.candlestick_pattern import candlestick_patterns
 from analysis.candlestick_pattern import PATTERNS
-from simulator.ReverseEvaluator import KDJReverseEvaluator, BBReverseEvaluator
+from simulator.ReverseEvaluator import KDJReverseEvaluator, BBReverseEvaluator, ADXFRACReverseEvaluator
 
 def test_webdata_multiple():
     startdate = '2015-01-01'
@@ -29,8 +29,8 @@ def test_webdata_multiple():
 
 def test_webdata_single():
     startdate = '2015-08-15'
-    enddate = '2016-02-05'
-    prices = get_data_of_symbol('AMZN', startdate, enddate, fill_empty=False)
+    enddate = '2016-02-08'
+    prices = get_data_of_symbol('FB', startdate, enddate, fill_empty=False)
     plot_single_symbol(prices, indicators={
         # "VOLUME" : None,
         # "BB" : None,
@@ -40,12 +40,12 @@ def test_webdata_single():
         # "RSI" : None,
         # "MFI" : None,
         # "CMF" : None,
-        "KDJ" : {"windows": [14, 3, 3]},
+        "KDJ" : {"windows": [9, 3, 3]},
         # "STOCH" : {"windows": [9, 3, 3]},
-        # "ADX": {"window": 14},
+        "ADX": {"window": 9},
         # "ATR": {"window": 14},
         "FRAC": {"draw_breakout": True},
-        "CCI": {"window": 20},
+        "CCI": {"window": 14},
     })
 
 
@@ -230,19 +230,30 @@ def test_csvdata():
     symbols = csvdata.get_available_symbols()
     csvdata.get_data_of_symbol(symbols[0], "2016-01-01", "2016-01-08", False)
 
+IT_SYMBOLS = ['AAPL', 'AMZN', 'GOOG', 'FB', 'IBM', 'MSFT', 'QCOM', 'ORCL', 'NFLX',
+              'INTL', 'SAP', 'CRM', 'VMW', 'PANW', 'CA', 'INTU', 'BABA', 'JD',
+              'BIDU']
 
 def test_kdjevaluator():
     evaluator = KDJReverseEvaluator('2014-01-01', '2016-02-01')
     evaluator.start()
     evaluator.dump_report()
 
+
 def test_bbevaluator_mode1():
     evaluator = BBReverseEvaluator('2014-01-01', '2016-02-01', mode=1)
     evaluator.start()
     evaluator.dump_report()
 
+
 def test_bbevaluator_mode2():
     evaluator = BBReverseEvaluator('2014-01-01', '2016-02-01', mode=2)
+    evaluator.start()
+    evaluator.dump_report()
+
+
+def test_adxfracevaluator():
+    evaluator = ADXFRACReverseEvaluator('2014-01-01', '2016-02-01', target_period=3, symbols=IT_SYMBOLS)
     evaluator.start()
     evaluator.dump_report()
 
@@ -264,3 +275,4 @@ if __name__ == "__main__":
     # test_kdjevaluator()
     # test_bbevaluator_mode1()
     # test_bbevaluator_mode2()
+    # test_adxfracevaluator()

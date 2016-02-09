@@ -1,6 +1,7 @@
 from simulator.BaseEvaluator import BaseEvaluator
 from utils.csvdata import get_data_of_symbol
-from analysis.indicators import kdj, bollinger_bands
+from analysis.indicators import kdj, bollinger_bands, adx
+from analysis.candlestick_pattern import fractals
 
 
 class ReverseEvaluator(BaseEvaluator):
@@ -64,7 +65,7 @@ class KDJReverseEvaluator(ReverseEvaluator):
     """
 
     def __init__(self, start_date, end_date, symbols=None, target_period=5):
-        ReverseEvaluator.__init__(self, start_date, end_date, symbols=symbols)
+        ReverseEvaluator.__init__(self, start_date, end_date, symbols=symbols, target_period=target_period)
 
 
     def count_signals(self, prices, gain, result):
@@ -98,7 +99,7 @@ class BBReverseEvaluator(ReverseEvaluator):
             1: intersect middle band
             2: intersect lower band or upper band
         """
-        ReverseEvaluator.__init__(self, start_date, end_date, symbols=symbols)
+        ReverseEvaluator.__init__(self, start_date, end_date, symbols=symbols, target_period=target_period)
         self.mode = mode
 
 
@@ -128,3 +129,23 @@ class BBReverseEvaluator(ReverseEvaluator):
                 self.increase_bull_signal(result, gain[i] > 0)
             elif close[i - 1] > upper_band[i - 1] and close[i] < upper_band[i]:
                 self.increase_bear_signal(result, gain[i] < 0)
+
+
+class ADXFRACReverseEvaluator(ReverseEvaluator):
+    """
+    """
+    def __init__(self, start_date, end_date, symbols=None, target_period=3):
+        ReverseEvaluator.__init__(self, start_date, end_date, symbols=symbols, target_period=target_period)
+
+
+    def count_signals(self, prices, gain, result):
+        frac, breakout = fractals(prices)
+        adx_val, pdi, mdi = adx(prices)
+
+        for i in range(5, len(gain) - self.target_period):
+            if adx_val[i] > 20 and adx_val[i] > adx_val[i-1] and pdi[i] > mdi[i] and breakout[i] == 1:
+                self.increase_bull_signal(result, gain[i] > 0)
+            elif adx_val[i] > 20  and adx_val[i] > adx_val[i-1] and pdi[i] < mdi[i] and breakout[i] == -1:
+                self.increase_bear_signal(result, gain[i] < 0)
+
+        self.ts_print(result)

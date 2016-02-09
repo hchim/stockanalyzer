@@ -414,7 +414,7 @@ def plot_atr(ax, prices, params):
 
 
 def plot_fractals(ax, prices, params={"draw_breakout": True}):
-    frac = fractals(prices)
+    frac, breakout = fractals(prices)
     high = prices["High"]
     low = prices["Low"]
     close = prices["Close"]
@@ -425,12 +425,10 @@ def plot_fractals(ax, prices, params={"draw_breakout": True}):
     for i in range(2, len(frac)):
         # check breakout
         if params["draw_breakout"]:
-            if pre_up >= 0 and close[i] > high[pre_up]:
+            if breakout[i] == 1:
                 ax.plot([pre_up, i], [high[pre_up], high[pre_up]], color="red")
-                pre_up = -1 # remove repeated plot
-            elif pre_down >= 0 and close[i] < low[pre_down]:
+            elif breakout[i] == -1:
                 ax.plot([pre_down, i], [low[pre_down], low[pre_down]], color="green")
-                pre_down = -1 # remove repeated plot
         # draw fractals
         if frac[i] == 1:
             ax.plot(i, high[i] + mean, 'r^')

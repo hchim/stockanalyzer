@@ -182,15 +182,28 @@ def candlestick_patterns(prices, pattern_names=[]):
 def fractals(prices):
     length = len(prices.index)
     frac = pd.Series(np.zeros(length), index=prices.index)
+    breakout = pd.Series(np.zeros(length), index=prices.index)
     if length < 5:
-        return frac
+        return frac, breakout
 
     high = prices["High"]
     low = prices["Low"]
+    close = prices["Close"]
+    pre_up = -1
+    pre_down = -1
     for i in range(2, length - 2):
+        if pre_up >= 0 and close[i] > high[pre_up]:
+            breakout[i] = 1
+            pre_up = -1
+        elif pre_down >= 0 and close[i] < low[pre_down]:
+            breakout[i] = -1
+            pre_down = -1
+
         if high[i] > max(high[i-1], high[i-2], high[i+1], high[i+2]):
             frac[i] = 1
+            pre_up = i
         if low[i] < min(low[i-1], low[i-2], low[i+1], low[i+2]):
             frac[i] = -1
+            pre_down = i
 
-    return frac
+    return frac, breakout
