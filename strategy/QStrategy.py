@@ -1,5 +1,5 @@
 from learner.QLearner import QLearner
-from analysis.indicators import discritized_indicators
+from analysis.indicator_feature import indicator_features
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -7,10 +7,9 @@ import pandas as pd
 class QStrategy(object):
 
 
-    def __init__(self, params, bin_num):
+    def __init__(self, params):
         self.learner = QLearner(r_action_rate=0.8)
         self.params = params
-        self.bin_num = bin_num
 
     #TODO find a better reward function
     def calculate_reward(self, *args):
@@ -30,7 +29,7 @@ class QStrategy(object):
 
     def train_learner(self, prices):
         self.prices = prices
-        dist_inds = discritized_indicators(prices, self.params, self.bin_num)
+        dist_inds = indicator_features(prices, self.params)
         # TODO convergence check
         dest_q = []
         for i in range(0, 100):
@@ -51,7 +50,7 @@ class QStrategy(object):
 
     def predict(self, new_prices, num=1):
         self.prices = new_prices
-        dist_inds = discritized_indicators(new_prices, self.params, self.bin_num)
+        dist_inds = indicator_features(new_prices, self.params)
         points = dist_inds.iloc[-num:]
 
         actions = []
@@ -69,7 +68,6 @@ class QStrategy(object):
 
 
     def plot_data(self):
-
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.plot(range(0, len(self.dest_q)), self.dest_q)

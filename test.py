@@ -9,7 +9,6 @@ from analysis.basic import compute_daily_returns, analyze_market_correlation, ev
 from analysis.normindicators import calculate_indicators
 from strategy.SLStrategy import Strategy
 from learner.BagLearner import BagLearner
-from analysis.indicators import discritized_indicators
 from strategy.QStrategy import QStrategy
 from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
@@ -168,25 +167,12 @@ def evaluate_strategy():
     strategy.plot_data()
 
 
-def test_discritized_indicators():
-    startdate = '2015-01-01'
-    enddate = '2015-12-23'
-    prices = get_data_of_symbol("AAPL", startdate, enddate)
-    indicators = discritized_indicators(prices,
-                                      {
-                                          "MFI": None,
-                                          "RSI":{"window":14},
-                                          "CMF":None,
-                                      }, 10)
-    print indicators
-
-
 def test_qstrategy():
     strategy = QStrategy({
         "RSI":{"window":14},
         # "MFI":None,
         # "CMF":None,
-    }, 10)
+    })
     startdate = '2010-01-01'
     enddate = '2015-12-28'
     prices = get_data_of_symbol("AAPL", startdate, enddate)

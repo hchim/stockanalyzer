@@ -2,6 +2,10 @@
 This file implements the functions that extract features from indicators.
 """
 
+def indicator_features(prices, params):
+    #TODO implement indicator features
+    raise NotImplementedError
+
 """
 Trend Feature: it shows the current trend of the symbol.
     1: bull trend
