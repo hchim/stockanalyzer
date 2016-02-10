@@ -6,29 +6,45 @@ from utils.csvdata import get_available_symbols
 
 
 class BaseEvaluator(object):
+    """
+    This class implements the base functions of evaluators. It creates a group
+    of thread workers and allocates the task evenly to these workers.
+    """
 
-    def __init__(self, start_date, end_date, symbols=None):
+    def __init__(self, start_date, end_date, symbols=None, thread_number=None):
         """
-
         Parameters
         -----------
         start_date: string
         end_date: string
         symbols: list
-            The symbols to evaluate.
+            The symbols to evaluate. If not specified, all the csv files in the
+            'data/prices/' directory will be used to run the evaluation.
+        thread_number: int
+            The number of worker threads to create.
         """
         self.start_date = start_date
         self.end_date = end_date
-        self.thread_number = mp.cpu_count()
+
+        if thread_number is None:
+            self.thread_number = mp.cpu_count()
+        else:
+            self.thread_number = thread_number
+
         if symbols is None:
             self.symbols = get_available_symbols()
         else:
             self.symbols = symbols
+
         self.results = []
         self.report = "Not generated."
         self.thread_lock = th.Lock()
 
+
     def start(self):
+        """
+        Start the evaluator.
+        """
         threads = []
         avg = len(self.symbols) / self.thread_number
         index = 0
@@ -66,6 +82,9 @@ class BaseEvaluator(object):
 
 
     def generate_report(self):
+        """
+        Generate the evaluation report.
+        """
         raise NotImplementedError
 
 
@@ -80,6 +99,7 @@ class BaseEvaluator(object):
         self.thread_lock.acquire()
         print obj
         self.thread_lock.release()
+
 
 class WorkerThread(th.Thread):
 

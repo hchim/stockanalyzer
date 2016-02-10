@@ -17,7 +17,7 @@ from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
 from analysis.candlestick_pattern import candlestick_patterns
 from analysis.candlestick_pattern import PATTERNS
-from simulator.ReverseEvaluator import KDJReverseEvaluator, BBReverseEvaluator, ADXFRACReverseEvaluator
+from simulator.ReverseEvaluator import KDJReverseEvaluator
 
 def test_webdata_multiple():
     startdate = '2015-01-01'
@@ -235,31 +235,13 @@ IT_SYMBOLS = ['AAPL', 'AMZN', 'GOOG', 'FB', 'IBM', 'MSFT', 'QCOM', 'ORCL', 'NFLX
               'BIDU']
 
 def test_kdjevaluator():
-    evaluator = KDJReverseEvaluator('2014-01-01', '2016-02-01')
-    evaluator.start()
-    evaluator.dump_report()
-
-
-def test_bbevaluator_mode1():
-    evaluator = BBReverseEvaluator('2014-01-01', '2016-02-01', mode=1)
-    evaluator.start()
-    evaluator.dump_report()
-
-
-def test_bbevaluator_mode2():
-    evaluator = BBReverseEvaluator('2014-01-01', '2016-02-01', mode=2)
-    evaluator.start()
-    evaluator.dump_report()
-
-
-def test_adxfracevaluator():
-    evaluator = ADXFRACReverseEvaluator('2014-01-01', '2016-02-01', target_period=3, symbols=IT_SYMBOLS)
+    evaluator = KDJReverseEvaluator('2014-01-01', '2016-02-01', symbols=IT_SYMBOLS, mode=2)
     evaluator.start()
     evaluator.dump_report()
 
 
 if __name__ == "__main__":
-    test_webdata_single()
+    # test_webdata_single()
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
@@ -272,7 +254,4 @@ if __name__ == "__main__":
     # test_candlestick_patterns()
     # test_nbayes_learner()
     # test_csvdata()
-    # test_kdjevaluator()
-    # test_bbevaluator_mode1()
-    # test_bbevaluator_mode2()
-    # test_adxfracevaluator()
+    test_kdjevaluator()
