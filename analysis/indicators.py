@@ -91,34 +91,23 @@ def calculate_indicators(prices, params):
     dist_indicator: DataFrame
     """
     indicators = pd.DataFrame(index=prices.index)
-    close = prices['Close']
 
     for name in params.keys():
         values = None
         if name == "RSI":
-            values = rsi(close, params[name]["window"])
+            values = rsi(prices, params[name])
         elif name == "CMF":
-            values = cmf(prices)
+            values = cmf(prices, params[name])
         elif name == "MFI":
-            values = mfi(prices)
+            values = mfi(prices, params[name])
         elif name == "BB":
-            rm, upper, lower = bollinger_bands(close)
-            values = pd.DataFrame(index=rm.index, columns=["BB_Middle", "BB_Upper", "BB_Lower"])
-            values.loc[:, "BB_Middle"] = rm
-            values.loc[:, "BB_Upper"] = upper
-            values.loc[:, "BB_Lower"] = lower
-        elif name.startswith("SMA"):
-            window = int(name[3:])
-            values = sma(close, window)
-        elif name.startswith("EMA"):
-            window = int(name[3:])
-            values = ema(close, window)
+            values = bollinger_bands(prices, params[name])
+        elif name == "SMA":
+            values = sma(prices, params[name])
+        elif name == "EMA":
+            values = ema(prices, params[name])
         elif name == "MACD":
-            macd_val, signal, histgram = macd(close)
-            values = pd.DataFrame(index=macd_val.index, columns=["MACD_Val", "MACD_Signal", "MACD_Histgram"])
-            values.loc[:, "MACD_Val"] = macd_val
-            values.loc[:, "MACD_Signal"] = signal
-            values.loc[:, "MACD_Histgram"] = histgram
+            values = macd(prices, params[name])
 
         if values is not None:
             indicators = indicators.join(values)
@@ -127,127 +116,138 @@ def calculate_indicators(prices, params):
     return indicators
 
 
-def sma(prices, window):
+def sma(prices, params):
     """
-    Calculate the simple moving average indicator
+    Calculate the simple moving average indicator.
 
     Parameters
     ----------
-    prices: Series or DataFrame
-    window: int
-        the window of the moving average
+    prices: DataFrame
+    params: set
+            e.g. {"windows": [5, 10]}
 
     Returns
     ----------
-    sma_val : Series or DataFrame
-        the simple moving average of the prices in the given window
+    sma_val : DataFrame
+        the simple moving average of the close price.
     """
-    sma_val = pd.rolling_mean(prices, window)
-    if isinstance(sma_val, pd.Series):
-        sma_val = sma_val.to_frame()
+    windows = params["windows"]
+    close = prices["Close"].values
+    values = []
+    column_names = []
 
-    sma_val.rename(columns={sma_val.columns[-1]:"SMA{}".format(window)}, inplace=True)
-    return sma_val
+    for w in windows:
+        values.append(pd.rolling_mean(close, w))
+        column_names.append("SMA{}".format(w))
+
+    return pd.DataFrame(np.column_stack(tuple(values)), index=prices.index, columns=column_names)
 
 
-def ema(prices, window):
+def ema(prices, params):
     """
-    Calculate the exponential moving average indicator
+    Calculate the exponential moving average indicator.
 
     Parameters
     ----------
-    prices: Series or DataFrame
-    window: int
-        the window of the exponential moving average
+    prices: DataFrame
+    params: set
+            e.g. {"windows": [5, 10]}
 
     Returns
     ----------
-    ema_val: Series or DataFrame
-        the exponential moving average of the prices in the given window
+    ema_val : DataFrame
+        the simple moving average of the close price.
     """
-    ema_val = pd.ewma(prices, span=window)
-    if isinstance(ema_val, pd.Series):
-        ema_val = ema_val.to_frame()
+    windows = params["windows"]
+    close = prices["Close"].values
+    values = []
+    column_names = []
 
-    ema_val.rename(columns={ema_val.columns[-1]:"EMA{}".format(window)}, inplace=True)
-    return ema_val
+    for w in windows:
+        values.append(pd.ewma(close, span=w))
+        column_names.append("EMA{}".format(w))
+
+    return pd.DataFrame(np.column_stack(tuple(values)), index=prices.index, columns=column_names)
 
 
-def bollinger_bands(prices):
+def bollinger_bands(prices, params={"window": 20}):
     """
     Calculate the bollinger bands indicator
 
     Parameters
     ----------
-    prices: Series or DataFrame
+    prices: DataFrame
+    params: set
 
     Returns
     ----------
-    rm: Series or DataFrame
-        middle band
-    upper_band : Series or DataFrame
-    lower_band : Series or DataFrame
+    bb_vals: DataFrame
     """
-    rm = pd.rolling_mean(prices, 20)   # 20 day mean
-    rstd = pd.rolling_std(prices, 20)  # 20 day standard deviation
+    window = params["window"]
+
+    close = prices["Close"].values
+    rm = pd.rolling_mean(close, window)   # 20 day mean
+    rstd = pd.rolling_std(close, window)  # 20 day standard deviation
     upper_band = rm + (rstd * 2)
     lower_band = rm - (rstd * 2)
+    values = np.column_stack((rm, upper_band, lower_band))
+    return pd.DataFrame(values, index=prices.index, columns=["Middle", "Upper", "Lower"])
 
-    return rm, upper_band, lower_band
 
-
-def macd(prices):
+def macd(prices, params={"windows": [12, 26, 9]}):
     """
     Calculate the MACD indicator
 
     Parameters
     ----------
-    prices: Series or DataFrame
+    prices: DataFrame
 
     Returns
     ----------
-    macd_val: Series or DataFrame
-        macd values
-    signal: Series or DataFrame
-        signal values
-    histgram: Series or DataFrame
-        histgram values
+    macd_val: DataFrame
     """
-    ema12 = ema(prices, 12)
-    ema26 = ema(prices, 26)
-    macd_val = ema12.iloc[:, 0] - ema26.iloc[:, 0]
-    signal = ema(macd_val, 9).iloc[:, 0]
-    histgram = macd_val - signal
-    return macd_val, signal, histgram
+    close = prices["Close"].values
+    windows = params["windows"]
+
+    ema12 = pd.ewma(close, span=windows[0])
+    ema26 = pd.ewma(close, span=windows[1])
+    diff = ema12 - ema26
+    dea = pd.ewma(diff, span=windows[2])
+    macd_val = diff - dea
+
+    values = np.column_stack((diff, dea, macd_val))
+    return pd.DataFrame(values, index=prices.index, columns=["DIFF", "DEA", "MACD"])
 
 
-def rsi(prices, window=14):
+def rsi(prices, params={"window": 14}):
     """
     Calculate the RSI indicator.
 
     Parameters
     ----------
     prices: DataFrame
-    window: int
+    params: set
 
     Returns
     ----------
     rsi_val: DataFrame
     """
-    delta = prices - prices.shift(1)  # the difference between rows
+    window = params["window"]
+    close = prices["Close"]
+
+    delta = close - close.shift(1)  # the difference between rows
     gain = delta[delta > 0]  # gain
     lose = delta[delta < 0]  # lose
-    data = pd.concat([delta.iloc[1:], gain, lose], axis=1)
+    data = pd.concat([delta, gain, lose], axis=1)
     data.fillna(0, inplace=True) # fill NAN values
     data = pd.rolling_mean(data, window)  # average daily gain and lose
+
     rs = data.iloc[:, 1] / data.iloc[:,2] * -1
     rsi_val = 100 - 100 / (1 + rs)
-    rsi_val = rsi_val.to_frame()
-    rsi_val.rename(columns={rsi_val.columns[-1]:"RSI"}, inplace=True)
-    return rsi_val
+    return pd.DataFrame(rsi_val.values, index=prices.index, columns=["RSI"])
 
 
-def cmf(prices):
+def cmf(prices, params={"window": 20}):
     """
     1. Money Flow Multiplier = [(Close  -  Low) - (High - Close)] /(High - Low)
     2. Money Flow Volume = Money Flow Multiplier x Volume for the Period
@@ -262,21 +262,22 @@ def cmf(prices):
     ----------
     cmf_val: DataFrame
     """
+    window = params["window"]
     mfm = ((prices['Close'] - prices['Low']) - (prices['High'] - prices['Close'])) \
           /(prices['High'] - prices['Low'])
     mfv = mfm * prices['Volume']
-    mfv = pd.rolling_sum(mfv, 20)
-    volumes = pd.rolling_sum(prices['Volume'], 20)
-    cmf_val = (mfv/volumes).to_frame()
-    cmf_val.rename(columns={cmf_val.columns[-1]:"CMF"}, inplace=True)
-    return cmf_val
+    mfv = pd.rolling_sum(mfv, window)
+    volumes = pd.rolling_sum(prices['Volume'], window)
+    cmf_val = (mfv/volumes)
+
+    return pd.DataFrame(cmf_val.values, index=prices.index, columns=["CMF"])
 
 
 def __tp(prices):
     return (prices['High'] + prices['Low'] + prices['Close']) / 3.0
 
 
-def mfi(prices):
+def mfi(prices, params={"window": 14}):
     """
     1. Typical Price = (High + Low + Close)/3
     2. Raw Money Flow = Typical Price x Volume
@@ -292,6 +293,7 @@ def mfi(prices):
     ----------
     mfi_val: DataFrame
     """
+    window = params["window"]
     tp = __tp(prices)
     rmf = tp * prices['Volume']
     prmf = rmf.copy()
@@ -302,11 +304,10 @@ def mfi(prices):
         else:
             prmf[date] = 0
 
-    mfr = pd.rolling_sum(prmf, 14)/pd.rolling_sum(nrmf, 14)
+    mfr = pd.rolling_sum(prmf, window)/pd.rolling_sum(nrmf, window)
     mfi_val = 100 - 100. / (1 + mfr)
-    mfi_val = mfi_val.to_frame()
-    mfi_val.rename(columns={mfi_val.columns[-1]:"MFI"}, inplace=True)
-    return mfi_val
+
+    return pd.DataFrame(mfi_val.values, index=prices.index, columns=["MFI"])
 
 
 def __rsv(prices, window):
@@ -444,6 +445,7 @@ def atr(prices, params={"window":14}):
 
 
 def adx(prices, params={"window":14}):
+    window = params["window"]
     tr = __tr(prices)
     high = prices["High"]
     low = prices["Low"]
@@ -463,15 +465,15 @@ def adx(prices, params={"window":14}):
         if down > up and down > 0:
             mdm[i] = down
 
-    str = __wilder_smooth_1(tr, window=params["window"])
-    spdm = __wilder_smooth_1(pdm, window=params["window"])
-    smdm = __wilder_smooth_1(mdm, window=params["window"])
+    str = __wilder_smooth_1(tr, window)
+    spdm = __wilder_smooth_1(pdm, window)
+    smdm = __wilder_smooth_1(mdm, window)
     # green line
     pdi = spdm / str * 100
     # red line
     mdi = smdm / str * 100
     dx = abs(pdi - mdi) / (pdi + mdi) * 100
-    adx_val = __wilder_smooth_2(dx, window=params["window"])
+    adx_val = __wilder_smooth_2(dx, window)
     return adx_val, pdi, mdi
 
 

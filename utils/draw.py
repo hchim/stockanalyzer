@@ -36,6 +36,16 @@ def plot_multi_symbols(prices, title="Stock Prices", xlabel="Date", ylabel="Pric
     plt.show()
 
 
+def plot_scatter(data, beta, alpha, y_symbol, x_symbol = "SPY"):
+    data.plot(kind='scatter', x=x_symbol, y=y_symbol) # draw scatter figure
+    plt.plot(data[x_symbol], beta*data[x_symbol] + alpha, '-', color='r')
+    plt.show()
+
+def plot_histogram(data, bins=20):
+    data.hist(bins=bins)
+    plt.show()
+
+
 def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, patterns=None):
     """
     Plot the stock prices with indicators and order signals.
@@ -71,13 +81,13 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
     # setup figure
     figure.tight_layout()
     figure.subplots_adjust(wspace=0, hspace=0.2)
-    plot_xticks(prices.index, indices)
+    __plot_xticks(prices.index, indices)
 
     # draw price
     if type == "candlestick":
-        plot_candlestick(ax, prices, width=0.5)
+        __plot_candlestick(ax, prices, width=0.5)
         if patterns is not None:
-            plot_candlestick_patterns(ax, prices, patterns)
+            __plot_candlestick_patterns(ax, prices, patterns)
     else:
         ax.plot(range(len(prices)), close_prices)
 
@@ -89,54 +99,52 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
     for indicator in indicators.keys():
         params = indicators[indicator]
         if indicator == "VOLUME":
-            plot_volume(axarr[figure_index], prices)
+            __plot_volume(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == 'BB':
-            plot_bollinger_band(ax, close_prices)
-        elif indicator.startswith("SMA"):
-            window = int(indicator[3:])
-            plot_sma(ax, close_prices, window)
-        elif indicator.startswith("EMA"):
-            window = int(indicator[3:])
-            plot_ema(ax, close_prices, window)
+            __plot_bollinger_band(ax, indices, prices, params)
+        elif indicator == "SMA":
+            __plot_sma(ax, indices, prices, params)
+        elif indicator == "EMA":
+            __plot_ema(ax, indices, prices, params)
         elif indicator == 'MACD':
-            plot_macd(axarr[figure_index], close_prices)
+            __plot_macd(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == 'RSI':
-            plot_rsi(axarr[figure_index], close_prices, params)
+            __plot_rsi(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == "CMF":
-            plot_cmf(axarr[figure_index], prices)
+            __plot_cmf(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == "MFI":
-            plot_mfi(axarr[figure_index], prices)
+            __plot_mfi(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == 'KDJ':
-            plot_kdj(axarr[figure_index], prices, params)
+            __plot_kdj(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == 'STOCH':
-            plot_stoch(axarr[figure_index], prices, params)
+            __plot_stoch(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == 'ADX':
-            plot_adx(axarr[figure_index], prices, params)
+            __plot_adx(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == 'ATR':
-            plot_atr(axarr[figure_index], prices, params)
+            __plot_atr(axarr[figure_index], indices, prices, params)
             figure_index += 1
         elif indicator == 'FRAC':
-            plot_fractals(ax, prices)
+            __plot_fractals(ax, indices, prices, params)
         elif indicator == 'CCI':
-            plot_cci(axarr[figure_index], prices, params)
+            __plot_cci(axarr[figure_index], indices, prices, params)
             figure_index += 1
 
     # plot orders
     if orders is not None:
-        plot_orders(ax, orders, prices)
+        __plot_orders(ax, indices, orders, prices, params)
 
     plt.show()
 
 
-def plot_xticks(dates, indices):
+def __plot_xticks(dates, indices):
     date_strs = [""]
     new_ind = [0]
     pre_month = dates[0].month
@@ -148,40 +156,45 @@ def plot_xticks(dates, indices):
     plt.xticks(new_ind, date_strs)
 
 
-def plot_bollinger_band(ax, prices):
-    middle, upper, lower = bollinger_bands(prices)
-    indices = range(len(prices))
-    ax.plot(indices, middle, lw=0.5)
-    ax.plot(indices, upper, lw=0.5)
-    ax.plot(indices, lower, lw=0.5)
+def __plot_bollinger_band(ax, indices, prices, params=None):
+    if params is None:
+        values = bollinger_bands(prices)
+    else:
+        values = bollinger_bands(prices, params)
+
+    ax.plot(indices, values, lw=0.5)
 
 
-def plot_macd(ax, prices):
-    macd_val, signal, histogram = macd(prices)
-    indices = range(len(prices))
+def __plot_macd(ax, indices, prices, params=None):
+    if params is None:
+        values = macd(prices)
+    else:
+        values = macd(prices, params)
+
+    macd_val = values["MACD"]
     for i in indices:
         line = Line2D(
-            xdata=(i, i), ydata=(0, histogram.ix[i]),
-            color = 'red',
+            xdata=(i, i), ydata=(0, macd_val[i]),
+            color = 'red' if  macd_val[i] >= 0 else 'green',
             linewidth=1,
             antialiased=True,
         )
         ax.add_line(line)
 
     ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
-    ax.plot(indices, macd_val, lw=0.5)
-    ax.plot(indices, signal, lw=0.5)
+    ax.plot(indices, values, lw=0.5)
     ax.set_ylabel('MACD')
     ax.grid(b=True, axis='x')
 
 
-def plot_orders(ax, orders, prices):
+def __plot_orders(ax, indices, orders, prices, params):
     """
     Plot order signals
 
     Parameters
     ----------
     ax: Axes
+    indices: array
     orders: DataFrame
     prices: DataFrame
     """
@@ -201,24 +214,23 @@ def plot_orders(ax, orders, prices):
             ax.plot(ind, high[ind] + mean, 'gv')
 
 
-def plot_sma(ax, prices, window):
-    sma_val = sma(prices, window)
-    ax.plot(range(len(sma_val)), sma_val, lw=0.5)
+def __plot_sma(ax, indices, prices, params):
+    sma_val = sma(prices, params)
+    ax.plot(indices, sma_val, lw=0.5)
 
 
-def plot_ema(ax, prices, window):
-    ema_val = ema(prices, window)
-    ax.plot(range(len(ema_val)), ema_val, lw=0.5)
+def __plot_ema(ax, indices, prices, params):
+    ema_val = ema(prices, params=params)
+    ax.plot(indices, ema_val, lw=0.5)
 
 
-def plot_rsi(ax, prices, params):
-    if not params:
-        window = 14
+def __plot_rsi(ax, indices, prices, params):
+    if params is None:
+        rsi_val = rsi(prices)
     else:
-        window = params['window']
+        rsi_val = rsi(prices, params)
 
-    rsi_val = rsi(prices, window)
-    ax.plot(range(len(rsi_val)), rsi_val, lw=0.5)
+    ax.plot(indices, rsi_val, lw=0.5)
     ax.axhline(70, color="red", ls="--", alpha=0.5, lw=0.5)
     ax.axhline(30, color="green", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylabel('RSI')
@@ -227,20 +239,26 @@ def plot_rsi(ax, prices, params):
     ax.grid(b=True, axis='x')
 
 
-def plot_cmf(ax, prices):
-    cmf_val = cmf(prices)
+def __plot_cmf(ax, indices, prices, params):
+    if params is None:
+        cmf_val = cmf(prices)
+    else:
+        cmf_val = cmf(prices, params)
 
-    ax.plot(range(len(cmf_val)), cmf_val, lw=0.5)
+    ax.plot(indices, cmf_val, lw=0.5)
     ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylabel('CMF')
     ax.legend_ = None
     ax.grid(b=True, axis='x')
 
 
-def plot_mfi(ax, prices):
-    mfi_val = mfi(prices)
+def __plot_mfi(ax, indices, prices, params=None):
+    if params is None:
+        mfi_val = mfi(prices)
+    else:
+        mfi_val = mfi(prices, params)
 
-    ax.plot(range(len(mfi_val)), mfi_val, lw=0.5)
+    ax.plot(indices, mfi_val, lw=0.5)
     ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
     ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
     ax.set_ylim([0, 100])
@@ -249,9 +267,9 @@ def plot_mfi(ax, prices):
     ax.grid(b=True, axis='x')
 
 
-def plot_kdj(ax, prices, params):
+def __plot_kdj(ax, indices, prices, params):
     kdj_val = kdj(prices, params)
-    indices = range(len(kdj_val))
+
     ax.plot(indices, kdj_val, lw=0.5)
     ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
     ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
@@ -260,9 +278,9 @@ def plot_kdj(ax, prices, params):
     ax.grid(b=True, axis='x')
 
 
-def plot_stoch(ax, prices, params):
+def __plot_stoch(ax, indices, prices, params):
     kd_val = stoch(prices, params)
-    indices = range(len(kd_val))
+
     ax.plot(indices, kd_val, lw=0.5)
     ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
     ax.axhline(50, color="black", ls="--", alpha=0.5, lw=0.5)
@@ -272,8 +290,13 @@ def plot_stoch(ax, prices, params):
     ax.grid(b=True, axis='x')
 
 
-def plot_volume(ax, prices, width=0.6):
-    for i in range(len(prices)):
+def __plot_volume(ax, indices, prices, params=None):
+    if params is None:
+        width = 0.6
+    else:
+        width = params["width"]
+
+    for i in indices:
         p = prices.iloc[i, :]
         open = p["Open"]
         close = p["Close"]
@@ -293,23 +316,13 @@ def plot_volume(ax, prices, width=0.6):
         )
         rect.set_alpha(0.5)
         ax.add_patch(rect)
+
     ax.set_ylim([0, prices["Volume"].max() * 1.25])
     ax.set_ylabel('Volume')
     ax.grid(b=True, axis='x')
 
 
-def plot_histogram(data, bins=20):
-    data.hist(bins=bins)
-    plt.show()
-
-
-def plot_scatter(data, beta, alpha, y_symbol, x_symbol = "SPY"):
-    data.plot(kind='scatter', x=x_symbol, y=y_symbol) # draw scatter figure
-    plt.plot(data[x_symbol], beta*data[x_symbol] + alpha, '-', color='r')
-    plt.show()
-
-
-def plot_candlestick(ax, prices, width=0.5, colorup='red', colordown='green', alpha=0.8):
+def __plot_candlestick(ax, prices, width=0.5, colorup='red', colordown='green', alpha=0.8):
     offset = width / 2.0
     line_width = width * 2
 
@@ -359,7 +372,7 @@ def plot_candlestick(ax, prices, width=0.5, colorup='red', colordown='green', al
     ax.autoscale_view()
 
 
-def plot_candlestick_patterns(ax, prices, patterns, candle_width=0.5):
+def __plot_candlestick_patterns(ax, prices, patterns, candle_width=0.5):
     pattern_signals = candlestick_patterns(prices, patterns)
     offset = candle_width/2
     for i in range(len(prices.index)):
@@ -392,9 +405,9 @@ def plot_candlestick_patterns(ax, prices, patterns, candle_width=0.5):
             ax.add_patch(rect)
 
 
-def plot_adx(ax, prices, params):
+def __plot_adx(ax, indices, prices, params):
     adx_val, pdi, mdi = adx(prices, params)
-    indices = range(len(adx_val))
+
     ax.plot(indices, adx_val, color='black')
     ax.plot(indices, pdi, lw=0.5, color='red')
     ax.plot(indices, mdi, lw=0.5, color='green')
@@ -404,25 +417,24 @@ def plot_adx(ax, prices, params):
     ax.grid(b=True, axis='x')
 
 
-def plot_atr(ax, prices, params):
+def __plot_atr(ax, indices, prices, params):
     atr_val = atr(prices, params)
-    indices = range(len(atr_val))
+
     ax.plot(indices, atr_val, lw=0.5, color='black')
     ax.set_ylabel('ATR')
     ax.legend_ = None
     ax.grid(b=True, axis='x')
 
 
-def plot_fractals(ax, prices, params={"draw_breakout": True}):
+def __plot_fractals(ax, indices, prices, params={"draw_breakout": True}):
     frac, breakout = fractals(prices)
     high = prices["High"]
     low = prices["Low"]
-    close = prices["Close"]
     mean = abs(high-low).mean()
 
     pre_up = -1
     pre_down = -1
-    for i in range(2, len(frac)):
+    for i in indices:
         # check breakout
         if params["draw_breakout"]:
             if breakout[i] == 1:
@@ -438,9 +450,9 @@ def plot_fractals(ax, prices, params={"draw_breakout": True}):
             pre_down = i
 
 
-def plot_cci(ax, prices, params={"window": 20}):
+def __plot_cci(ax, indices, prices, params={"window": 20}):
     cci_val = cci(prices, params)
-    indices = range(len(cci_val))
+
     ax.plot(indices, cci_val, lw=0.5, color='black')
     ax.fill_between(indices, 100, cci_val, where=cci_val>=100, facecolor='red', alpha=0.3, interpolate=True)
     ax.fill_between(indices, -100, cci_val, where=cci_val<=-100, facecolor='green', alpha=0.3, interpolate=True)

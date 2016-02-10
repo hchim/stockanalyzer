@@ -1,23 +1,22 @@
 import pandas as pd
 import numpy as np
 import math
-import utils.csvdata as csvdata
 
-from utils.webdata import get_data_of_symbol, get_close_of_symbols
+from utils.webdata import get_close_of_symbols
 from utils.draw import plot_single_symbol, plot_multi_symbols, normalize_data, plot_histogram, plot_scatter
 from analysis.portfolio import find_optimal_allocations, get_portfolio_stats, get_portfolio_value
 from analysis.basic import compute_daily_returns, analyze_market_correlation, evaluate_predict_result
 from analysis.normindicators import calculate_indicators
 from strategy.SLStrategy import Strategy
 from learner.BagLearner import BagLearner
-from learner.KNNLearner import KNNLearner
-from analysis.indicators import discritized_indicators, adx
+from analysis.indicators import discritized_indicators
 from strategy.QStrategy import QStrategy
 from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
-from analysis.candlestick_pattern import candlestick_patterns
 from analysis.candlestick_pattern import PATTERNS
 from simulator.ReverseEvaluator import KDJReverseEvaluator
+from utils.csvdata import get_data_of_symbol
+
 
 def test_webdata_multiple():
     startdate = '2015-01-01'
@@ -32,18 +31,18 @@ def test_webdata_single():
     enddate = '2016-02-08'
     prices = get_data_of_symbol('FB', startdate, enddate, fill_empty=False)
     plot_single_symbol(prices, indicators={
-        # "VOLUME" : None,
-        # "BB" : None,
-        # "MACD" : None,
-        # "SMA5" : None,
-        # "EMA5" : None,
-        # "RSI" : None,
-        # "MFI" : None,
-        # "CMF" : None,
+        "VOLUME" : None,
+        "BB" : None,
+        "MACD" : None,
+        "SMA" : {"windows": [5, 13]},
+        "EMA" : {"windows": [5, 13]},
+        "RSI" : None,
+        "MFI" : None,
+        "CMF" : None,
         "KDJ" : {"windows": [9, 3, 3]},
-        # "STOCH" : {"windows": [9, 3, 3]},
+        "STOCH" : {"windows": [9, 3, 3]},
         "ADX": {"window": 9},
-        # "ATR": {"window": 14},
+        "ATR": {"window": 14},
         "FRAC": {"draw_breakout": True},
         "CCI": {"window": 14},
     })
@@ -226,10 +225,6 @@ def test_candlestick_patterns():
     plot_single_symbol(prices, patterns=PATTERNS.keys())
 
 
-def test_csvdata():
-    symbols = csvdata.get_available_symbols()
-    csvdata.get_data_of_symbol(symbols[0], "2016-01-01", "2016-01-08", False)
-
 IT_SYMBOLS = ['AAPL', 'AMZN', 'GOOG', 'FB', 'IBM', 'MSFT', 'QCOM', 'ORCL', 'NFLX',
               'INTL', 'SAP', 'CRM', 'VMW', 'PANW', 'CA', 'INTU', 'BABA', 'JD',
               'BIDU']
@@ -245,7 +240,7 @@ if __name__ == "__main__":
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
-    # test_normalized_indicators()
+    test_normalized_indicators()
     # evaluate_strategy()
     # test_strategy()
     # test_discritized_indicators()
@@ -253,5 +248,4 @@ if __name__ == "__main__":
     # test_nbayes_learner()
     # test_candlestick_patterns()
     # test_nbayes_learner()
-    # test_csvdata()
-    test_kdjevaluator()
+    # test_kdjevaluator()

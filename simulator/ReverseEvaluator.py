@@ -86,28 +86,30 @@ class KDJReverseEvaluator(ReverseEvaluator):
 
     def count_signals(self, prices, gain, result):
         kdj_val = kdj(prices)
-        macd_val, signal, histgram = macd(prices)
+        macd_val = macd(prices)
         j_val = kdj_val['J']
+        diff = macd_val["DIFF"]
+        dea = macd_val["DEA"]
 
         if self.mode == 1:
-            self.__mode_1(j_val, macd_val, signal, gain, result)
+            self.__mode_1(j_val, diff, dea, gain, result)
         else:
-            self.__mode_2(kdj_val["K"], kdj_val["J"], macd_val, signal, gain, result)
+            self.__mode_2(kdj_val["K"], kdj_val["J"], diff, dea, gain, result)
 
         self.ts_print(result)
 
 
-    def __mode_1(self, j_val, macd_val, macd_signal, gain, result):
+    def __mode_1(self, j_val, diff, dea, gain, result):
         for i in range(1, len(gain) - self.target_period):
-            if j_val[i - 1] < 0 and j_val[i] > 0 and macd_val[i] > 0 and macd_signal[i] > macd_val[i]:
+            if j_val[i - 1] < 0 and j_val[i] > 0 and diff[i] > 0 and dea[i] > diff[i]:
                 self.increase_bull_signal(result, gain[i] > 0)
-            elif j_val[i - 1] > 100 and j_val[i] < 100 and macd_val[i] < 0 and macd_signal[i] < macd_val[i]:
+            elif j_val[i - 1] > 100 and j_val[i] < 100 and diff[i] < 0 and dea[i] < diff[i]:
                 self.increase_bear_signal(result, gain[i] < 0)
 
 
-    def __mode_2(self, k_val, d_val, macd_val, macd_signal, gain, result):
+    def __mode_2(self, k_val, d_val, diff, dea, gain, result):
         for i in range(1, len(gain) - self.target_period):
-            if k_val[i - 1] < d_val[i - 1] and k_val[i] >= d_val[i] and k_val[i] < 20 and macd_val[i] > 0 and macd_signal[i] > macd_val[i]:
+            if k_val[i - 1] < d_val[i - 1] and k_val[i] >= d_val[i] and k_val[i] < 20 and diff[i] > 0 and dea[i] > diff[i]:
                 self.increase_bull_signal(result, gain[i] > 0)
-            elif k_val[i - 1] > d_val[i - 1] and k_val[i] <= d_val[i] and k_val[i] > 80 and macd_val[i] < 0 and macd_signal[i] < macd_val[i]:
+            elif k_val[i - 1] > d_val[i - 1] and k_val[i] <= d_val[i] and k_val[i] > 80 and diff[i] < 0 and dea[i] < diff[i]:
                 self.increase_bear_signal(result, gain[i] < 0)
