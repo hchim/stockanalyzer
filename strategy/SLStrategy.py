@@ -13,7 +13,7 @@ y:  Y is the future 5 day return because our strategy want to predict the future
 
 """
 
-class Strategy(object):
+class SLStrategy(object):
 
     DATE_FORMAT = '%Y-%m-%d'
 

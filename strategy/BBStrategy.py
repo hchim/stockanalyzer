@@ -17,29 +17,29 @@ class BBStrategy(Strategy):
 
 
     def __init__(self):
-        params = {"BB":None}
+        params = {"BB":{"window": 20}}
         super(BBStrategy, self).__init__(params)
 
 
     def is_buy_signal(self, inds, pre_inds, prices, pre_prices):
         if pre_prices is None or pre_inds is None:
             return False
-        return pre_prices["Close"] < inds["BB_Lower"] and prices["Close"] > inds["BB_Lower"]
+        return pre_prices["Close"] < inds["Lower"] and prices["Close"] > inds["Lower"]
 
 
     def is_sell_signal(self, inds, pre_inds, prices, pre_prices):
         if pre_prices is None or pre_inds is None:
             return False
-        return pre_prices["Close"] < inds["BB_Middle"] and prices["Close"] > inds["BB_Middle"]
+        return pre_prices["Close"] < inds["Middle"] and prices["Close"] > inds["Middle"]
 
 
     def is_short_signal(self, inds, pre_inds, prices, pre_prices):
         if pre_prices is None or pre_inds is None:
             return False
-        return pre_prices["Close"] > inds["BB_Upper"] and prices["Close"] < inds["BB_Upper"]
+        return pre_prices["Close"] > inds["Upper"] and prices["Close"] < inds["Upper"]
 
 
     def is_cover_signal(self, inds, pre_inds, prices, pre_prices):
         if pre_prices is None or pre_inds is None:
             return False
-        return pre_prices["Close"] > inds["BB_Middle"] and prices["Close"] < inds["BB_Middle"]
+        return pre_prices["Close"] > inds["Middle"] and prices["Close"] < inds["Middle"]

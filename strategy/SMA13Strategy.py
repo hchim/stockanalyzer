@@ -7,7 +7,7 @@ class SMA13Strategy(Strategy):
 
 
     def __init__(self):
-        params = {"SMA5":None, "SMA13": None, "SMA60": None}
+        params = {"SMA": {"windows": [5, 13, 60]}}
         super(SMA13Strategy, self).__init__(params)
 
 
