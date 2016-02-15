@@ -1,8 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from analysis.normindicators import calculate_indicators
-
+from analysis.indicator_feature import indicator_features
 """
 This class defines the trading strategy. The x and y values of the trading strategy.
 
@@ -35,7 +34,7 @@ class Strategy(object):
 
 
     def calculate_x(self, prices):
-        x = calculate_indicators(prices, self.indicators)
+        x = indicator_features(prices, self.indicators)
         return x
 
 

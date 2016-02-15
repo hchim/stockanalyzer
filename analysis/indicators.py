@@ -70,6 +70,12 @@ def sma(prices, params):
     return pd.DataFrame(np.column_stack(tuple(values)), index=prices.index, columns=column_names)
 
 
+def __ema(close, window):
+    data = pd.ewma(close, span=window)
+    data[0:window-1] = np.nan
+    return data
+
+
 def ema(prices, params):
     """
     Calculate the exponential moving average indicator.
@@ -91,7 +97,8 @@ def ema(prices, params):
     column_names = []
 
     for w in windows:
-        values.append(pd.ewma(close, span=w))
+        values.append(__ema(close, w))
+
         column_names.append("EMA{}".format(w))
 
     return pd.DataFrame(np.column_stack(tuple(values)), index=prices.index, columns=column_names)
@@ -133,13 +140,13 @@ def macd(prices, params={"windows": [12, 26, 9]}):
     ----------
     macd_val: DataFrame
     """
-    close = prices["Close"].values
+    close = prices["Close"]
     windows = params["windows"]
 
-    ema12 = pd.ewma(close, span=windows[0])
-    ema26 = pd.ewma(close, span=windows[1])
+    ema12 = __ema(close, windows[0])
+    ema26 = __ema(close, windows[1])
     diff = ema12 - ema26
-    dea = pd.ewma(diff, span=windows[2])
+    dea = __ema(diff, windows[2])
     macd_val = diff - dea
 
     values = np.column_stack((diff, dea, macd_val))

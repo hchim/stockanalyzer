@@ -1,6 +1,3 @@
-import numpy as np
-import math
-
 from Learner import Learner
 from LRLearner import LRLearner
 from KNNLearner import KNNLearner

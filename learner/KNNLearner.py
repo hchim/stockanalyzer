@@ -1,6 +1,4 @@
 import numpy as np
-import math
-import heapq
 
 from utils.MaxHeap import MaxHeap
 from Learner import Learner

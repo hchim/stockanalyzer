@@ -1,9 +1,9 @@
+import analysis.indicator_feature as indfr
+
 from simulator.BaseEvaluator import BaseEvaluator
 from utils.csvdata import get_data_of_symbol
-from analysis.indicators import kdj, macd
 
-
-class ReverseEvaluator(BaseEvaluator):
+class TrendReverseEvaluator(BaseEvaluator):
     """
     This class count the number of bull/bear signals and count the number of
     valid bull/bear signals (price increasing or decreasing in the target
@@ -48,10 +48,12 @@ class ReverseEvaluator(BaseEvaluator):
             bear_signal_count += result["bear_signal_count"]
             valid_bear_signal_count += result["valid_bear_signal_count"]
 
+        bull_percent = valid_bull_signal_count * 100.0 / bull_signal_count if bull_signal_count > 0 else 0
+        bear_percent = valid_bear_signal_count * 100.0 / bear_signal_count if bear_signal_count > 0 else 0
         self.report = "Bull Percent: {}% ({}) Bear Percent: {}% ({})"\
             .format(
-                valid_bull_signal_count * 100.0 / bull_signal_count, bull_signal_count,
-                valid_bear_signal_count * 100.0 / bear_signal_count, bear_signal_count
+                bull_percent, bull_signal_count,
+                bear_percent, bear_signal_count
             )
 
 
@@ -67,49 +69,40 @@ class ReverseEvaluator(BaseEvaluator):
             result["valid_bear_signal_count"] += 1
 
 
-class KDJReverseEvaluator(ReverseEvaluator):
-    """
-    mode 1:
-    Bull Percent: 55.7251908397% (131) Bear Percent: 53.4482758621% (116)
-    mode 2: k value [20, 80]
-    Bull Percent: 76.9230769231% (13) Bear Percent: 41.1764705882% (17)
-    """
+class CompositeTREvaluator(TrendReverseEvaluator):
 
-    def __init__(self, start_date, end_date, symbols=None, thread_number=None, target_period=5, mode=1):
+    def __init__(self, start_date, end_date, features,
+                 symbols=None, thread_number=None, target_period=5):
         """
-        mode:  1: overbought and oversell signals. 2: cross signal
+        Parameters
+        -----------
+        features: list(tuple)
+            tuple[0]: function name of the feature
+            tuple[1]: parameters of the feature
         """
-        ReverseEvaluator.__init__(self, start_date, end_date, symbols=symbols,
+        TrendReverseEvaluator.__init__(self, start_date, end_date, symbols=symbols,
                                   thread_number=thread_number, target_period=target_period)
-        self.mode = mode
+        self.features = features
 
 
     def count_signals(self, prices, gain, result):
-        kdj_val = kdj(prices)
-        macd_val = macd(prices)
-        j_val = kdj_val['J']
-        diff = macd_val["DIFF"]
-        dea = macd_val["DEA"]
+        data = []
+        for f in self.features:
+            values = getattr(indfr, f[0])(prices, f[1])
+            data.append(values)
 
-        if self.mode == 1:
-            self.__mode_1(j_val, diff, dea, gain, result)
-        else:
-            self.__mode_2(kdj_val["K"], kdj_val["J"], diff, dea, gain, result)
+        for i in range(1, len(gain) - self.target_period):
+            if self.__check_signal(data, i, 1):
+                self.increase_bull_signal(result, gain[i] > 0)
+            elif self.__check_signal(data, i, -1):
+                self.increase_bear_signal(result, gain[i] < 0)
 
         self.ts_print(result)
 
 
-    def __mode_1(self, j_val, diff, dea, gain, result):
-        for i in range(1, len(gain) - self.target_period):
-            if j_val[i - 1] < 0 and j_val[i] > 0 and diff[i] > 0 and dea[i] > diff[i]:
-                self.increase_bull_signal(result, gain[i] > 0)
-            elif j_val[i - 1] > 100 and j_val[i] < 100 and diff[i] < 0 and dea[i] < diff[i]:
-                self.increase_bear_signal(result, gain[i] < 0)
+    def __check_signal(self, features, index, value):
+        for feature in features:
+            if feature[index] != value:
+                return False
 
-
-    def __mode_2(self, k_val, d_val, diff, dea, gain, result):
-        for i in range(1, len(gain) - self.target_period):
-            if k_val[i - 1] < d_val[i - 1] and k_val[i] >= d_val[i] and k_val[i] < 20 and diff[i] > 0 and dea[i] > diff[i]:
-                self.increase_bull_signal(result, gain[i] > 0)
-            elif k_val[i - 1] > d_val[i - 1] and k_val[i] <= d_val[i] and k_val[i] > 80 and diff[i] < 0 and dea[i] < diff[i]:
-                self.increase_bear_signal(result, gain[i] < 0)
+        return True
