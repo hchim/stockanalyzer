@@ -23,28 +23,6 @@ def test_webdata_multiple():
     plot_multi_symbols(prices, normalize=True)
 
 
-def test_webdata_single():
-    startdate = '2015-08-01'
-    enddate = '2016-02-15'
-    prices = get_data_of_symbol('JMEI', startdate, enddate, fill_empty=False)
-    plot_single_symbol(prices, indicators={
-        # "VOLUME" : None,
-        # "BB" : None,
-        # "MACD" : None,
-        # "SMA" : {"windows": [5, 13]},
-        # "EMA" : {"windows": [5, 13]},
-        # "RSI" : None,
-        # "MFI" : None,
-        # "CMF" : None,
-        # "KDJ" : {"windows": [9, 3, 3]},
-        # "STOCH" : {"windows": [9, 3, 3]},
-        "ADX": {"window": 9},
-        "ATR": {"window": 14},
-        # "FRAC": {"draw_breakout": True},
-        "CCI": {"window": 14},
-    })
-
-
 def test_portfolio_optimize():
     startdate = '2015-01-01'
     enddate = '2015-12-23'
@@ -220,7 +198,6 @@ def test_trevaluator():
 
 
 if __name__ == "__main__":
-    test_webdata_single()
     # test_webdata_multiple()
     # test_portfolio_optimize()
     # test_market_correlation_analysis()
@@ -230,4 +207,4 @@ if __name__ == "__main__":
     # test_nbayes_learner()
     # test_candlestick_patterns()
     # test_nbayes_learner()
-    # test_trevaluator()
+    test_trevaluator()

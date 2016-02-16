@@ -46,7 +46,7 @@ def plot_histogram(data, bins=20):
     plt.show()
 
 
-def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, patterns=None):
+def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, patterns=None, embed=False):
     """
     Plot the stock prices with indicators and order signals.
 
@@ -65,6 +65,8 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
         RSI: None (by default the window is 14) or {'window': 14}
     orders: DataFrame
         the order signals
+    embed: bool
+        If embed is true, returns the created figure. Otherwise, invoke plt.show() to display the figure.
     """
 
     close_prices = prices['Close']
@@ -141,7 +143,10 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
     if orders is not None:
         __plot_orders(ax, indices, orders, prices, params)
 
-    plt.show()
+    if embed:
+        return figure
+    else:
+        plt.show()
 
 
 def __plot_xticks(dates, indices):
