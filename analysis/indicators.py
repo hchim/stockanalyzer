@@ -50,7 +50,7 @@ def sma(prices, params):
     Parameters
     ----------
     prices: DataFrame
-    params: set
+    params: dict
             e.g. {"windows": [5, 10]}
 
     Returns
@@ -83,7 +83,7 @@ def ema(prices, params):
     Parameters
     ----------
     prices: DataFrame
-    params: set
+    params: dict
             e.g. {"windows": [5, 10]}
 
     Returns
@@ -111,7 +111,7 @@ def bollinger_bands(prices, params={"window": 20}):
     Parameters
     ----------
     prices: DataFrame
-    params: set
+    params: dict
 
     Returns
     ----------
@@ -135,6 +135,7 @@ def macd(prices, params={"windows": [12, 26, 9]}):
     Parameters
     ----------
     prices: DataFrame
+    params: dict
 
     Returns
     ----------
@@ -160,7 +161,7 @@ def rsi(prices, params={"window": 14}):
     Parameters
     ----------
     prices: DataFrame
-    params: set
+    params: dict
 
     Returns
     ----------
@@ -191,6 +192,7 @@ def cmf(prices, params={"window": 20}):
     ----------
     prices: DataFrame
         Includes the open, close, high, low and volume.
+    params: dict
 
     Returns
     ----------
@@ -222,6 +224,7 @@ def mfi(prices, params={"window": 14}):
     ----------
     prices: DataFrame
         Includes the open, close, high, low and volume.
+    params: dict
 
     Returns
     ----------
@@ -366,6 +369,16 @@ def atr(prices, params={"window":14}):
     """
     Current ATR = [(Prior ATR x 13) + Current TR] / 14
     Average True Range (ATR) is an indicator that measures volatility.
+
+    Parameters
+    ----------
+    prices: DataFrame
+        Includes the open, close, high, low and volume.
+    params: dict
+
+    Returns
+    ----------
+    atr_val: DataFrame
     """
     tr = __tr(prices)
     window = params["window"]
@@ -375,10 +388,22 @@ def atr(prices, params={"window":14}):
 
     for i in range(2, length):
         atr_val[i] = (atr_val[i-1] * (window - 1) + tr[i]) / window
-    return atr_val
+    return pd.DataFrame(atr_val.values, index=prices.index, columns=["ATR"])
 
 
 def adx(prices, params={"window":14}):
+    """
+    Parameters
+    ----------
+    prices: DataFrame
+        Includes the open, close, high, low and volume.
+    params: dict
+
+    Returns
+    ----------
+    adx_val: DataFrame
+        the DataFrame has three columns: ADX, +DI, -DI
+    """
     window = params["window"]
     tr = __tr(prices)
     high = prices["High"]
@@ -408,10 +433,22 @@ def adx(prices, params={"window":14}):
     mdi = smdm / str * 100
     dx = abs(pdi - mdi) / (pdi + mdi) * 100
     adx_val = __wilder_smooth_2(dx, window)
-    return adx_val, pdi, mdi
+    values = np.column_stack((adx_val, pdi, mdi))
+    return pd.DataFrame(values, index=prices.index, columns=["ADX", "+DI", "-DI"])
 
 
 def cci(prices, params={"window":20}):
+    """
+    Parameters
+    ----------
+    prices: DataFrame
+        Includes the open, close, high, low and volume.
+    params: dict
+
+    Returns
+    ----------
+    cci_val: DataFrame
+    """
     length = len(prices.index)
     window = params["window"]
 
@@ -424,4 +461,4 @@ def cci(prices, params={"window":20}):
         dev = np.sum(abs(stp[i] - tp[i-window+1:i+1])) / window
         cci_val[i] = (tp[i]  -  stp[i]) / (0.015 * dev)
 
-    return cci_val
+    return pd.DataFrame(cci_val.values, index=prices.index, columns=["CCI"])

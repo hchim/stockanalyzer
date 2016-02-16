@@ -6,12 +6,12 @@ from utils.webdata import get_close_of_symbols, get_data_of_symbol
 from utils.draw import plot_single_symbol, plot_multi_symbols, normalize_data, plot_histogram, plot_scatter
 from analysis.portfolio import find_optimal_allocations, get_portfolio_stats, get_portfolio_value
 from analysis.basic import compute_daily_returns, analyze_market_correlation, evaluate_predict_result
-from strategy.SLStrategy import Strategy
 from learner.BagLearner import BagLearner
 from strategy.QStrategy import QStrategy
+from strategy.SLStrategy import SLStrategy
 from simulator.TradeSimulator import TradeSimulator
 from learner.NaiveBayesLearner import NaiveBayesLearner
-from analysis.candlestick_pattern import PATTERNS
+from analysis.candlestick_pattern import GOOD_PATTERNS
 from simulator.TrendReverseEvaluator import CompositeTREvaluator
 
 
@@ -36,10 +36,10 @@ def test_webdata_single():
         # "RSI" : None,
         # "MFI" : None,
         # "CMF" : None,
-        "KDJ" : {"windows": [9, 3, 3]},
+        # "KDJ" : {"windows": [9, 3, 3]},
         # "STOCH" : {"windows": [9, 3, 3]},
-        # "ADX": {"window": 9},
-        # "ATR": {"window": 14},
+        "ADX": {"window": 9},
+        "ATR": {"window": 14},
         # "FRAC": {"draw_breakout": True},
         "CCI": {"window": 14},
     })
@@ -102,7 +102,7 @@ def test_strategy():
     test_rows = len(prices) - train_rows
 
     learner = BagLearner("KNN", {"k" : 5}, bags=20, percent=0.9)
-    strategy = Strategy(indicators, learner)
+    strategy = SLStrategy(indicators, learner)
     strategy.train_learner(prices.iloc[:train_rows+5,:])
     orders = strategy.generate_orders("AAPL", prices, test_rows, save_to_file=True, filepath="./out/orders.csv")
 
@@ -139,7 +139,7 @@ def evaluate_strategy():
     test_rows = len(prices) - train_rows
 
     learner = BagLearner("KNN", {"k" : 5}, bags=10, percent=0.8, boost=True)
-    strategy = Strategy(indicators, learner)
+    strategy = SLStrategy(indicators, learner)
     strategy.train_learner(prices.iloc[:train_rows+5,:])
 
     testy = strategy.calculate_y(prices).values[-test_rows:-5]
@@ -193,7 +193,7 @@ def test_candlestick_patterns():
     startdate = '2015-12-15'
     enddate = '2016-01-15'
     prices = get_data_of_symbol('JMEI', startdate, enddate, fill_empty=False)
-    plot_single_symbol(prices, patterns=PATTERNS.keys())
+    plot_single_symbol(prices, patterns=GOOD_PATTERNS)
 
 
 IT_SYMBOLS = ['AAPL', 'AMZN', 'GOOG', 'FB', 'IBM', 'MSFT', 'QCOM', 'ORCL', 'NFLX',

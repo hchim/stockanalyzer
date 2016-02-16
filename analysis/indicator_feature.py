@@ -176,6 +176,7 @@ def reverse_cci_over_sell_buy(prices, params=None):
         cci_val = cci(prices)
     else:
         cci_val = cci(prices, params)
+    cci_val = cci_val["CCI"]
     data = np.zeros(len(prices.index))
 
     for i in range(1, len(prices.index)):

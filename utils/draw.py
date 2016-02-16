@@ -406,7 +406,10 @@ def __plot_candlestick_patterns(ax, prices, patterns, candle_width=0.5):
 
 
 def __plot_adx(ax, indices, prices, params):
-    adx_val, pdi, mdi = adx(prices, params)
+    adx_val = adx(prices, params)
+    pdi = adx_val["+DI"]
+    mdi = adx_val["-DI"]
+    adx_val = adx_val["ADX"]
 
     ax.plot(indices, adx_val, color='black')
     ax.plot(indices, pdi, lw=0.5, color='red')
@@ -452,6 +455,7 @@ def __plot_fractals(ax, indices, prices, params={"draw_breakout": True}):
 
 def __plot_cci(ax, indices, prices, params={"window": 20}):
     cci_val = cci(prices, params)
+    cci_val = cci_val["CCI"]
 
     ax.plot(indices, cci_val, lw=0.5, color='black')
     ax.fill_between(indices, 100, cci_val, where=cci_val>=100, facecolor='red', alpha=0.3, interpolate=True)
