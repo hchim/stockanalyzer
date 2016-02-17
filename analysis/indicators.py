@@ -182,6 +182,17 @@ def rsi(prices, params={"window": 14}):
     return pd.DataFrame(rsi_val.values, index=prices.index, columns=["RSI"])
 
 
+def __mfm(prices):
+    mfm = ((prices['Close'] - prices['Low']) - (prices['High'] - prices['Close'])) \
+          /(prices['High'] - prices['Low'])
+    return mfm
+
+
+def __mfv(prices):
+    mfm = __mfm(prices)
+    return mfm * prices['Volume']
+
+
 def cmf(prices, params={"window": 20}):
     """
     1. Money Flow Multiplier = [(Close  -  Low) - (High - Close)] /(High - Low)
@@ -199,9 +210,7 @@ def cmf(prices, params={"window": 20}):
     cmf_val: DataFrame
     """
     window = params["window"]
-    mfm = ((prices['Close'] - prices['Low']) - (prices['High'] - prices['Close'])) \
-          /(prices['High'] - prices['Low'])
-    mfv = mfm * prices['Volume']
+    mfv = __mfv(prices)
     mfv = pd.rolling_sum(mfv, window)
     volumes = pd.rolling_sum(prices['Volume'], window)
     cmf_val = (mfv/volumes)
@@ -462,3 +471,38 @@ def cci(prices, params={"window":20}):
         cci_val[i] = (tp[i]  -  stp[i]) / (0.015 * dev)
 
     return pd.DataFrame(cci_val.values, index=prices.index, columns=["CCI"])
+
+
+def obv(prices, params=None):
+    length = len(prices.index)
+    close = prices["Close"]
+    volume = prices["Volume"]
+    obv_val = pd.Series(np.zeros(length), index=prices.index)
+    obv_val[0] = volume[0]
+
+    for i in range(1, length):
+        if close[i] > close[i-1]:
+            obv_val[i] = obv_val[i-1] + volume[i]
+        elif close[i] < close[i-1]:
+            obv_val[i] = obv_val[i-1] - volume[i]
+        else:
+            obv_val[i] = obv_val[i-1]
+
+    return pd.DataFrame(obv_val.values, index=prices.index, columns=["OBV"])
+
+
+def adl(prices, params=None):
+    """
+    1. Money Flow Multiplier = [(Close  -  Low) - (High - Close)] /(High - Low)
+    2. Money Flow Volume = Money Flow Multiplier x Volume for the Period
+    3. ADL = Previous ADL + Current Period's Money Flow Volume
+    """
+    length = len(prices.index)
+    mfv = __mfv(prices)
+    adl_val = pd.Series(np.zeros(length), index=prices.index)
+    adl_val[0] = mfv[0]
+
+    for i in range(1, length):
+        adl_val[i] = adl_val[i-1] + mfv[i]
+
+    return pd.DataFrame(adl_val.values, index=prices.index, columns=["ADL"])

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
 
-from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch, adx, atr, cci
+from analysis.indicators import sma, bollinger_bands, ema, macd, rsi, mfi, cmf, kdj, stoch, adx, atr, cci, obv, adl
 from analysis.candlestick_pattern import candlestick_patterns, fractals
 from analysis.candlestick_pattern import PATTERNS
 
@@ -71,7 +71,8 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
 
     close_prices = prices['Close']
     # the set of indicators that must be draw in a subfigure
-    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH", "ATR", "ADX", "CCI"])
+    subfigure_indicator_set = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH", "ATR", "ADX", "CCI", "OBV",
+                                   "ADL"])
     subfigure_number = len(subfigure_indicator_set.intersection(set(indicators.keys())))
     figure, axarr = plt.subplots(subfigure_number + 1, sharex=True)
     ax = axarr    # Axes of the first subfigure
@@ -137,6 +138,12 @@ def plot_single_symbol(prices, type="candlestick", indicators={}, orders=None, p
             __plot_fractals(ax, indices, prices, params)
         elif indicator == 'CCI':
             __plot_cci(axarr[figure_index], indices, prices, params)
+            figure_index += 1
+        elif indicator == 'OBV':
+            __plot_obv(axarr[figure_index], indices, prices, params)
+            figure_index += 1
+        elif indicator == 'ADL':
+            __plot_adl(axarr[figure_index], indices, prices, params)
             figure_index += 1
 
     # plot orders
@@ -473,3 +480,27 @@ def __plot_cci(ax, indices, prices, params={"window": 20}):
     ax.set_ylabel('CCI')
     ax.legend_ = None
     ax.grid(b=True, axis='x')
+
+
+def __plot_obv(ax, indices, prices, params=None):
+    obv_val = obv(prices, params)
+    obv_val = obv_val["OBV"]
+
+    ax.plot(indices, obv_val, lw=0.5, color='blue')
+    ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
+    ax.set_ylabel('OBV')
+    ax.legend_ = None
+    ax.grid(b=True, axis='x')
+    ax.grid(b=True, axis='y')
+
+
+def __plot_adl(ax, indices, prices, params=None):
+    adl_val = adl(prices, params)
+    adl_val = adl_val["ADL"]
+
+    ax.plot(indices, adl_val, lw=0.5, color='blue')
+    ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
+    ax.set_ylabel('ADL')
+    ax.legend_ = None
+    ax.grid(b=True, axis='x')
+    ax.grid(b=True, axis='y')

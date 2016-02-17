@@ -12,8 +12,8 @@ class HomeFrame(tk.Frame):
         tk.Frame.__init__(self, parent)
         # TODO set these values based on gui
         startdate = '2015-08-01'
-        enddate = '2016-02-15'
-        prices = get_data_of_symbol('JMEI', startdate, enddate, fill_empty=False)
+        enddate = '2016-02-17'
+        prices = get_data_of_symbol('BABA', startdate, enddate, fill_empty=False)
         figure = plot_single_symbol(prices, indicators={
             # "VOLUME" : None,
             # "BB" : None,
@@ -23,12 +23,14 @@ class HomeFrame(tk.Frame):
             # "RSI" : None,
             # "MFI" : None,
             # "CMF" : None,
-            # "KDJ" : {"windows": [9, 3, 3]},
+            "KDJ" : {"windows": [9, 3, 3]},
             # "STOCH" : {"windows": [9, 3, 3]},
-            "ADX": {"window": 9},
-            "ATR": {"window": 14},
+            # "ADX": {"window": 9},
+            # "ATR": {"window": 14},
             # "FRAC": {"draw_breakout": True},
-            "CCI": {"window": 14},
+            # "CCI": {"window": 14},
+            "OBV": None,
+            "ADL": None,
         }, embed=True)
 
         canvas = FigureCanvasTkAgg(figure, self)
