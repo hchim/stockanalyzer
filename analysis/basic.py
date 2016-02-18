@@ -55,3 +55,10 @@ def evaluate_predict_result(test, predict):
     corr = np.corrcoef(predict, y=test)
 
     return rmse, corr
+
+
+def normalize(values):
+    """
+    Normalize the values.
+    """
+    return (values - values[0]) / values[0]
