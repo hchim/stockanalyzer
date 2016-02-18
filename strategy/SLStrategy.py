@@ -1,50 +1,84 @@
 import pandas as pd
-import matplotlib.pyplot as plt
 
-from analysis.indicator_feature import indicator_features
+import analysis.indicators as ind
+from analysis.basic import normalize
 """
 This class defines the trading strategy. The x and y values of the trading strategy.
 
 x:  X is a N dimension vector that composed by a group of normalized indicators.
     The value of each indicator ranges from -1 to 1, so that a single indcator
     cannot overwhelm the result.
-y:  Y is the future 5 day return because our strategy want to predict the future
-    price.
-
+y:  Y is either the future T day return or the normalized price in after T days.
 """
+
+TARGET_PRICE = "PRICE"
+TARGET_RETURN = "RETURN"
 
 class SLStrategy(object):
 
     DATE_FORMAT = '%Y-%m-%d'
 
-    def __init__(self, indicators, learner):
+    def __init__(self, indicators, learner, target=TARGET_PRICE, target_period=3):
+        """
+        Parameters
+        -----------
+        indicators: [dict]
+            the indicators to compare. for example:
+            {"name": "obv", "column":"OBV", "normalize":True, "params": None}
+            name: function name
+            column: the column of the indicator value
+            normalize: normalize the value
+            params: parameters of the indicator
+        target: String
+            RETURN: find the correlation with the return after T days (T is the target period).
+            PRICE: find the correlation with the price after T days.
+        target_period: int
+        """
         self.indicators = indicators
         self.learner = learner
+        self.target = target
+        self.target_period = target_period
+        self.base_price = None
 
 
     def train_learner(self, prices):
+        self.base_price = prices["Close"][0]
         x = self.calculate_x(prices)
         y = self.calculate_y(prices)
 
-        vals = x.join(y)
+        vals = y.to_frame().join(x, how="inner")
         vals.dropna(inplace=True)
         self.prices = prices
         self.values = vals
-        self.learner.train(vals[vals.columns[:-1]].values, vals[vals.columns[-1]].values)
+        self.corr = vals.corr().values[0, 1:]
+        self.learner.train(vals[vals.columns[1:]].values, vals[vals.columns[0]].values)
 
 
     def calculate_x(self, prices):
-        x = indicator_features(prices, self.indicators)
+        x = pd.DataFrame(index=prices.index)
+
+        for indicator in self.indicators:
+            ind_vals = getattr(ind, indicator["name"])(prices, indicator["params"])
+            ind_vals = ind_vals[indicator["column"]].dropna()
+            if indicator["normalize"] and ind_vals[0] != 0:
+                ind_vals = normalize(ind_vals)
+            x = x.join(pd.DataFrame(ind_vals.values, index=ind_vals.index, columns=[indicator["column"]]), how="inner")
+
         return x
 
 
     def calculate_y(self, prices):
-        """
-        y = prices[t+5]/prices[t] - 1
-        """
+        values = None
         close = prices['Close']
-        y = close.shift(-5)/close - 1
-        return y
+
+        if self.target == TARGET_RETURN:
+            values = close.shift(-1 * self.target_period)/close - 1
+        elif self.target == TARGET_PRICE:
+
+            values = normalize(close)
+            values = values.shift(-1 * self.target_period)
+
+        return values.dropna()
 
 
     def predict(self, new_prices, num=1):
@@ -58,17 +92,27 @@ class SLStrategy(object):
         ----------
         new_prices: DataFrame
             previous daily prices, we use these prices to calculate the indicators (x)
-            in the recent days and use the learner to predict the 5-days return.
+            in the recent days. new prices must be started from the same date as training
+            prices because both indicator value and its normalized value may be different
+            with different start date.
         num: int
-            predict the 5-days return
 
         Returns
         ----------
-        5dayreturn: np.array
+        y: np.array
+            the predicted y.
         """
         x = self.calculate_x(new_prices)
         x = x.iloc[-num:, :]
         return self.learner.query(x.values)
+
+
+    def __predicted_return(self, price, predicted):
+        if self.target == TARGET_RETURN:
+            return predicted
+        else:
+            predicted_price = (predicted + 1) * self.base_price
+            return (predicted_price - price) / price
 
 
     def generate_orders(self, symbol, new_prices, num=1,
@@ -76,7 +120,7 @@ class SLStrategy(object):
                         allow_short=True, start_value=1000000,
                         save_to_file=False, filepath="orders.csv"):
         dates = new_prices.index[-num:]
-        predicted_return = self.predict(new_prices, num)
+        predicted = self.predict(new_prices, num)
 
         cash = start_value
         long_shares = short_shares = 0
@@ -89,7 +133,7 @@ class SLStrategy(object):
         for i in range(len(dates)):
             date = dates[i]
             close = new_prices.loc[date, 'Close']
-            ret = predicted_return[i]
+            ret = self.__predicted_return(close, predicted[i])
 
             # long operations
             if long_shares == 0 and ret > buy_point:
@@ -128,20 +172,3 @@ class SLStrategy(object):
 
         df = pd.DataFrame(orders, columns=['Date', 'Symbol', 'Order', 'Shares'])
         return df
-
-
-    def plot_data(self):
-        dates = self.values.index
-        prices = self.prices.loc[dates[0]:dates[-1], 'Close']
-
-        fig, ax1 = plt.subplots()
-        # two y axis
-        ax2 = ax1.twinx()
-        ax2.plot(dates, self.values.iloc[:, :-1])
-        ax2.axhline(0, color="black")
-        ax1.plot(dates, self.values.iloc[:, -1:], color="purple")
-
-        ax1.set_xlabel('Date')
-        ax1.set_ylabel('Prices')
-
-        plt.show()

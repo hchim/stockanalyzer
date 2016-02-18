@@ -54,7 +54,7 @@ def evaluate_predict_result(test, predict):
     rmse = math.sqrt(((test - predict) ** 2).sum()/test.shape[0])
     corr = np.corrcoef(predict, y=test)
 
-    return rmse, corr
+    return rmse, corr[0, 1]
 
 
 def normalize(values):
