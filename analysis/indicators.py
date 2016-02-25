@@ -2,47 +2,6 @@ import pandas as pd
 import numpy as np
 
 
-def calculate_indicators(prices, params):
-    """
-    Calculate the indicators with the given prices.
-
-    Parameters
-    ----------
-    prices: DataFrame
-    params: map
-        The keys of the map are the names of the indicators. The values of the map are
-        the parameters to calculate the indicators.
-
-    Returns
-    ----------
-    dist_indicator: DataFrame
-    """
-    indicators = pd.DataFrame(index=prices.index)
-
-    for name in params.keys():
-        values = None
-        if name == "RSI":
-            values = rsi(prices, params[name])
-        elif name == "CMF":
-            values = cmf(prices, params[name])
-        elif name == "MFI":
-            values = mfi(prices, params[name])
-        elif name == "BB":
-            values = bollinger_bands(prices, params[name])
-        elif name == "SMA":
-            values = sma(prices, params[name])
-        elif name == "EMA":
-            values = ema(prices, params[name])
-        elif name == "MACD":
-            values = macd(prices, params[name])
-
-        if values is not None:
-            indicators = indicators.join(values)
-
-    indicators.dropna(inplace=True)
-    return indicators
-
-
 def sma(prices, params):
     """
     Calculate the simple moving average indicator.

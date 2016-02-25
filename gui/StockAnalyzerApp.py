@@ -58,12 +58,10 @@ class StockAnalyzerApp():
         self.root.config(menu=menubar)
 
 
-    def quit(self, quiet=False):
-        if quiet is False:
-            if msgbox.askokcancel("Quit", "Do you want to quit?"):
-                self.root.quit()
-                self.root.destroy()
-                sys.exit()
+    def quit(self):
+        self.root.quit()
+        self.root.destroy()
+        sys.exit()
 
 
     def run(self):

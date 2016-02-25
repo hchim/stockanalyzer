@@ -4,11 +4,7 @@ This file implements the functions that extract features from indicators.
 import numpy as np
 import pandas as pd
 
-from indicators import sma, ema, macd, kdj, cci
-
-def indicator_features(prices, params):
-    #TODO implement indicator features
-    raise NotImplementedError
+from indicators import sma, ema, macd, kdj, cci, adx
 
 """
 Trend Feature: it shows the current trend of the symbol.
@@ -71,7 +67,6 @@ def trend_macd_zero_line(prices, params=None):
     """
     macd_val = macd(prices)
     diff = macd_val["DIFF"]
-    dea = macd_val["DEA"]
     data = np.zeros(len(prices.index))
 
     for i in range(len(prices.index)):
@@ -83,11 +78,34 @@ def trend_macd_zero_line(prices, params=None):
     return pd.Series(data, index=prices.index)
 
 
+def trend_adx(prices, params={"window": 14, "threshold": 20}):
+    """
+    Rules:
+        1. bull : adx > 20 and +DI > -DI
+        2. bear : adx > 20 and +DI < -DI
+        3. otherwise, weak trend or no trend
+    """
+    adx_val = adx(prices, params)
+    pdi = adx_val["+DI"]
+    mdi = adx_val["-DI"]
+    adx_val = adx_val["ADX"]
+    data = np.zeros(len(prices.index))
+
+    for i in range(len(prices.index)):
+        if adx_val[i] > params["threshold"]:
+            if pdi[i] > mdi[i]:
+                data[i] = 1
+            else:
+                data[i] = -1
+
+    return pd.Series(data, index=prices.index)
+
+
 """
 Reverse Feature: it shows the price may increase or decrease.
-    1: increase
+    1: bull signal
     0: unknown
-    -1: decrease
+    -1: bear
 """
 
 def reverse_kdj_over_sell_buy(prices, params={"thresholds": [0, 100]}):
@@ -183,6 +201,23 @@ def reverse_cci_over_sell_buy(prices, params=None):
         if cci_val[i - 1] < -200 and cci_val[i] > -200:
             data[i] = 1
         elif cci_val[i - 1] > 200 and cci_val[i] < 200:
+            data[i] = -1
+
+    return pd.Series(data, index=prices.index)
+
+
+def reverse_cci_cross(prices, params=None):
+    if params is None:
+        cci_val = cci(prices)
+    else:
+        cci_val = cci(prices, params)
+    cci_val = cci_val["CCI"]
+    data = np.zeros(len(prices.index))
+
+    for i in range(1, len(prices.index)):
+        if cci_val[i - 1] < 100 and cci_val[i] > 100:
+            data[i] = 1
+        elif cci_val[i - 1] > -100 and cci_val[i] < -100:
             data[i] = -1
 
     return pd.Series(data, index=prices.index)
