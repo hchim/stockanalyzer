@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import math
 
 
@@ -62,3 +63,28 @@ def normalize(values):
     Normalize the values.
     """
     return (values - values[0]) / values[0]
+
+
+def daily_prices_to_weekly_prices(prices):
+    data = []
+    new_indices = []
+    indices = prices.index
+
+    start_ind = 0
+    pre_week = indices[0].isocalendar()[1]
+    for i in range(1, len(prices.index)):
+        week = indices[i].isocalendar()[1]
+        if week == pre_week:
+            continue
+        week_prices = prices.iloc[start_ind:i]
+        new_indices.append(indices[i-1])
+        data.append([week_prices["Open"][0],        # open
+                    np.max(week_prices["High"]),    # high
+                    np.min(week_prices["Low"]),     # low
+                    week_prices["Close"][-1],       # close
+                    np.sum(week_prices["Volume"])]) # volume
+        start_ind = i
+        pre_week = week
+
+    df = pd.DataFrame(data, columns=["Open", "High", "Low", "Close", "Volume"], index=new_indices)
+    return df

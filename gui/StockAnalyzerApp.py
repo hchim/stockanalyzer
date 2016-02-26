@@ -36,7 +36,8 @@ class StockAnalyzerApp():
         symbol_list.pack(fill=tk.BOTH, expand=True)
         symbol_list.bind('<<ListboxSelect>>', self.__on_symbol_selected)
 
-        symbols = [{"symbol":"AAPL"}, {"symbol":"AMZN"}]
+        symbols = [{"symbol":"AAPL"}, {"symbol":"AMZN"}, {"symbol":"NFLX"}, {"symbol":"FB"}
+                   , {"symbol":"BABA"}, {"symbol":"BIDU"}]
         for symbol in symbols:
             symbol_list.insert(tk.END, symbol["symbol"])
 

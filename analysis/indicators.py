@@ -63,7 +63,7 @@ def ema(prices, params):
     return pd.DataFrame(np.column_stack(tuple(values)), index=prices.index, columns=column_names)
 
 
-def bollinger_bands(prices, params={"window": 20}):
+def bb(prices, params={"window": 20}):
     """
     Calculate the bollinger bands indicator
 

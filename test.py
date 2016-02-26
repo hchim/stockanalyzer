@@ -3,12 +3,11 @@ import numpy as np
 import math
 
 from utils.webdata import get_close_of_symbols, get_data_of_symbol
-from utils.draw import plot_single_symbol, plot_multi_symbols, normalize_data, plot_histogram, plot_scatter
+from utils.draw import plot_multi_symbols, normalize_data, plot_histogram, plot_scatter
 from analysis.portfolio import find_optimal_allocations, get_portfolio_stats, get_portfolio_value
 from analysis.basic import compute_daily_returns, analyze_market_correlation, evaluate_predict_result
 from strategy.QStrategy import QStrategy
 from learner.NaiveBayesLearner import NaiveBayesLearner
-from analysis.candlestick_pattern import GOOD_PATTERNS
 from simulator.TrendReverseEvaluator import CompositeTREvaluator
 
 
@@ -102,13 +101,6 @@ def test_nbayes_learner():
     print learner.query(datax)
 
 
-def test_candlestick_patterns():
-    startdate = '2015-12-15'
-    enddate = '2016-01-15'
-    prices = get_data_of_symbol('JMEI', startdate, enddate, fill_empty=False)
-    plot_single_symbol(prices, patterns=GOOD_PATTERNS)
-
-
 IT_SYMBOLS = ['AAPL', 'AMZN', 'GOOG', 'FB', 'IBM', 'MSFT', 'QCOM', 'ORCL', 'NFLX',
               'INTL', 'SAP', 'CRM', 'VMW', 'PANW', 'CA', 'INTU', 'BABA', 'JD',
               'BIDU']
@@ -131,6 +123,7 @@ def test_trevaluator():
     evaluator.start()
     evaluator.dump_report()
 
+from analysis.basic import daily_prices_to_weekly_prices
 
 if __name__ == "__main__":
     # test_webdata_multiple()

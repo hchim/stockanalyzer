@@ -2,8 +2,9 @@ from Tkinter import *
 from datetime import date, timedelta
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-from utils.draw import plot_single_symbol
+from gui.SymbolPlotter import SymbolPlotter
 from utils.webdata import get_data_of_symbol
+from analysis.basic import daily_prices_to_weekly_prices
 
 class CanvasFrame(Frame):
 
@@ -26,7 +27,6 @@ class CanvasFrame(Frame):
 
     def update_figure(self, symbol):
         figure = self.__load_figure_of_symbol(symbol)
-        print self.canvas.get_width_height()
         self.canvas.figure = figure
         self.canvas.draw()
         self.canvas_toolbar.update()
@@ -34,10 +34,12 @@ class CanvasFrame(Frame):
 
     def __load_figure_of_symbol(self, symbol):
         today = date.today()
-        startdate = today - timedelta(days=365)
+        startdate = today - timedelta(days=3650)
 
         prices = get_data_of_symbol(symbol, startdate.isoformat(), today.isoformat(), fill_empty=False)
-        figure = plot_single_symbol(prices, indicators={
+        prices = daily_prices_to_weekly_prices(prices)
+        plotter = SymbolPlotter(embed=True)
+        figure = plotter.plot_single_symbol(prices, indicators={
             # "VOLUME" : None,
             # "BB" : None,
             # "MACD" : None,
@@ -46,14 +48,14 @@ class CanvasFrame(Frame):
             # "RSI" : None,
             # "MFI" : None,
             # "CMF" : None,
-            "KDJ" : {"windows": [9, 3, 3]},
-            # "STOCH" : {"windows": [9, 3, 3]},
-            # "ADX": {"window": 9},
+            # "KDJ" : {"windows": [9, 3, 3]},
+            "STOCH" : {"windows": [9, 3, 3]},
+            "ADX": {"window": 14},
             # "ATR": {"window": 14},
             # "FRAC": {"draw_breakout": True},
-            # "CCI": {"window": 14},
-            "OBV": None,
-            "ADL": None,
-        }, embed=True)
+            "CCI": {"window": 14},
+            # "OBV": None,
+            # "ADL": None,
+        })
 
         return figure

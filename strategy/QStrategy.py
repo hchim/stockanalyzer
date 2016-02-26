@@ -1,5 +1,4 @@
 from learner.QLearner import QLearner
-from analysis.indicator_feature import indicator_features
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -29,7 +28,8 @@ class QStrategy(object):
 
     def train_learner(self, prices):
         self.prices = prices
-        dist_inds = indicator_features(prices, self.params)
+        # dist_inds = indicator_features(prices, self.params)
+        dist_inds = None
         # TODO convergence check
         dest_q = []
         for i in range(0, 100):
