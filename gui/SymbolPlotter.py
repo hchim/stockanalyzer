@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import analysis.indicators as inds
+import matplotlib.patches as mpatches
 
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
@@ -10,8 +11,8 @@ from analysis.candlestick_pattern import PATTERNS
 class SymbolPlotter(object):
 
     # indicators that should be drawn in the subfigure
-    SUBFIGURE_INDICATORS = set(['MACD', 'RSI', "VOLUME", "MFI", "CMF", "KDJ", "STOCH", "ATR", "ADX", "CCI", "OBV",
-                                   "ADL"])
+    SUBFIGURE_INDICATORS = set(['macd', 'rsi', "volume", "mfi", "cmf", "kdj", "stoch", "atr", "adx", "cci", "obv",
+                                   "adl"])
 
     def __init__(self, type="candlestick", max_candles=150, embed=False):
         """
@@ -39,6 +40,16 @@ class SymbolPlotter(object):
         self.subfigure_num = len(self.SUBFIGURE_INDICATORS.intersection(set(self.indicators.keys())))
         self.indices = range(self.candlestick_num)
 
+        self.figure, self.ax_array = plt.subplots(self.subfigure_num + 1, sharex=True)
+        self.overlay_ax = self.ax_array    # Axes of the first subfigure
+        if self.subfigure_num > 0:
+            self.overlay_ax = self.ax_array[0]
+        self.figure_index = 1
+
+        # setup figure
+        self.figure.tight_layout()
+        self.figure.subplots_adjust(wspace=0, hspace=0.2)
+
 
     def plot_single_symbol(self, prices, indicators={}, orders=None, patterns=None):
         """
@@ -57,6 +68,8 @@ class SymbolPlotter(object):
             RSI: None (by default the window is 14) or {'window': 14}
         orders: DataFrame
             the order signals
+        patterns: dict
+            the candlestick patterns to draw.
         """
         self.prices = prices
         self.indicators = indicators
@@ -64,101 +77,102 @@ class SymbolPlotter(object):
         self.patterns = patterns
 
         self.__init_plotter()
-        prices = prices.tail(self.candlestick_num)
-        close_prices = prices['Close']
-        # the set of indicators that must be draw in a subfigure
-
-        figure, axarr = plt.subplots(self.subfigure_num + 1, sharex=True)
-        ax = axarr    # Axes of the first subfigure
-        if self.subfigure_num > 0:
-            ax = axarr[0]
-        figure_index = 1
-
-        # setup figure
-        figure.tight_layout()
-        figure.subplots_adjust(wspace=0, hspace=0.2)
-        self.__plot_xticks(prices.index, self.indices)
-
-        # draw price
-        if self.plot_type == "candlestick":
-            self.__plot_candlestick(ax, width=0.5)
-            if patterns is not None:
-                self.__plot_candlestick_patterns(ax, patterns)
-        else:
-            ax.plot(self.indices, close_prices)
-
-        ax.set_ylabel("Price")
-        ax.set_xlim([0, self.candlestick_num + 5])
-        ax.grid(True)
-
-        # plot indicators
-        for indicator in indicators.keys():
-            params = indicators[indicator]
-            if indicator == "VOLUME":
-                self.__plot_volume(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'BB':
-                self.__plot_bb(ax, params)
-            elif indicator == "SMA":
-                self.__plot_sma(ax, params)
-            elif indicator == "EMA":
-                self.__plot_ema(ax, params)
-            elif indicator == 'MACD':
-                self.__plot_macd(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'RSI':
-                self.__plot_rsi(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == "CMF":
-                self.__plot_cmf(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == "MFI":
-                self.__plot_mfi(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'KDJ':
-                self.__plot_kdj(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'STOCH':
-                self.__plot_stoch(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'ADX':
-                self.__plot_adx(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'ATR':
-                self.__plot_atr(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'FRAC':
-                self.__plot_fractals(ax, params)
-            elif indicator == 'CCI':
-                self.__plot_cci(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'OBV':
-                self.__plot_obv(axarr[figure_index], params)
-                figure_index += 1
-            elif indicator == 'ADL':
-                self.__plot_adl(axarr[figure_index], params)
-                figure_index += 1
+        self.__plot_xticks()
+        self.__plot_prices()
+        self.__plot_indicators()
 
         # plot orders
         if orders is not None:
-            self.__plot_orders(ax, orders, params)
+            self.__plot_orders(orders, None)
 
         if self.embed:
-            return figure
+            return self.figure
         else:
             plt.show()
 
 
-    def __plot_xticks(self, dates, indices):
+    def __plot_xticks(self):
+        dates = self.prices.index[-self.candlestick_num:]
+        span = (dates[-1] - dates[0]).days
         date_strs = [""]
         new_ind = [0]
         pre_month = dates[0].month
-        for i in indices:
-            if dates[i].month != pre_month:
-                date_strs.append(dates[i].strftime("%b"))
+        pre_year = dates[0].year
+
+        for i in self.indices:
+            if dates[i].year != pre_year:
+                date_strs.append(dates[i].strftime("%Y"))
                 new_ind.append(i)
+                pre_year = dates[i].year
                 pre_month = dates[i].month
+                continue
+
+            if dates[i].month != pre_month:
+                pre_month = dates[i].month
+                if span > self.max_candles and dates[i].month % 3 != 1:
+                    continue
+                date_strs.append(dates[i].strftime("%m"))
+                new_ind.append(i)
+
         plt.xticks(new_ind, date_strs)
+
+
+    def __plot_prices(self):
+        ax = self.overlay_ax
+        # draw price
+        if self.plot_type == "candlestick":
+            self.__plot_candlestick(ax, width=0.5)
+            if self.patterns is not None:
+                self.__plot_candlestick_patterns(ax)
+        else:
+            ax.plot(self.indices, self.prices["Close"])
+
+        ax.set_xlim([0, self.candlestick_num + 5])
+        ax.grid(True)
+
+
+    def __plot_indicators(self):
+        # plot indicators
+        for indicator in self.indicators.keys():
+            params = self.indicators[indicator]
+            if indicator in self.SUBFIGURE_INDICATORS:
+                ax = self.ax_array[self.figure_index]
+                self.figure_index += 1
+            else:
+                ax = self.overlay_ax
+
+            if indicator == "volume":
+                self.__plot_volume(ax, params)
+            elif indicator == 'bb':
+                self.__plot_bb(ax, params)
+            elif indicator == "sma":
+                self.__plot_sma(ax, params)
+            elif indicator == "ema":
+                self.__plot_ema(ax, params)
+            elif indicator == 'macd':
+                self.__plot_macd(ax, params)
+            elif indicator == 'rsi':
+                self.__plot_rsi(ax, params)
+            elif indicator == "cmf":
+                self.__plot_cmf(ax, params)
+            elif indicator == "mfi":
+                self.__plot_mfi(ax, params)
+            elif indicator == 'kdj':
+                self.__plot_kdj(ax, params)
+            elif indicator == 'stoch':
+                self.__plot_stoch(ax, params)
+            elif indicator == 'adx':
+                self.__plot_adx(ax, params)
+            elif indicator == 'atr':
+                self.__plot_atr(ax, params)
+            elif indicator == 'frac':
+                self.__plot_fractals(ax, params)
+            elif indicator == 'cci':
+                self.__plot_cci(ax, params)
+            elif indicator == 'obv':
+                self.__plot_obv(ax, params)
+            elif indicator == 'adl':
+                self.__plot_adl(ax, params)
 
 
     def __calculate_indicator(self, indicator, params):
@@ -169,9 +183,13 @@ class SymbolPlotter(object):
         values = values.tail(self.candlestick_num)
         return values
 
+
     def __plot_bb(self, ax, params=None):
         values = self.__calculate_indicator("bb", params)
-        ax.plot(self.indices, values, lw=0.5)
+        ax.plot(self.indices, values["Middle"], lw=0.5, color="red")
+        ax.plot(self.indices, values["Upper"], lw=0.5, color="black")
+        ax.plot(self.indices, values["Lower"], lw=0.5, color="black")
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
 
 
     def __plot_macd(self, ax, params=None):
@@ -188,20 +206,21 @@ class SymbolPlotter(object):
             ax.add_line(line)
 
         ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
-        ax.plot(self.indices, values, lw=0.5)
-        ax.set_ylabel('MACD')
+        ax.plot(self.indices, values["DIFF"], lw=0.5, color="red")
+        ax.plot(self.indices, values["DEA"], lw=0.5, color="black")
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
 
 
-    def __plot_orders(self, ax, orders, params):
+    def __plot_orders(self, orders, params=None):
         """
         Plot order signals
 
         Parameters
         ----------
-        ax: Axes
         orders: DataFrame
         """
+        ax = self.overlay_ax
         prices = self.prices.tail(self.candlestick_num)
         dates = prices.index.tolist()
         low = prices["Low"]
@@ -223,68 +242,71 @@ class SymbolPlotter(object):
 
     def __plot_sma(self, ax, params):
         values = self.__calculate_indicator("sma", params)
-        ax.plot(self.indices, values, lw=0.5)
+        for col in values.columns:
+            ax.plot(self.indices, values[col], lw=0.5)
 
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
 
     def __plot_ema(self, ax, params):
         values = self.__calculate_indicator("ema", params)
-        ax.plot(self.indices, values, lw=0.5)
+        for col in values.columns:
+            ax.plot(self.indices, values[col], lw=0.5)
+
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
 
 
     def __plot_rsi(self, ax, params):
         values = self.__calculate_indicator("rsi", params)
 
-        ax.plot(self.indices, values, lw=0.5)
+        ax.plot(self.indices, values, lw=0.5, label="RSI", color="black")
         ax.axhline(70, color="red", ls="--", alpha=0.5, lw=0.5)
         ax.axhline(30, color="green", ls="--", alpha=0.5, lw=0.5)
-        ax.set_ylabel('RSI')
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.set_ylim([0, 100])
-        ax.legend_ = None
         ax.grid(b=True, axis='x')
 
 
     def __plot_cmf(self, ax, params):
         values = self.__calculate_indicator("cmf", params)
 
-        ax.plot(self.indices, values, lw=0.5)
+        ax.plot(self.indices, values, lw=0.5, label="CMF", color="black")
         ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
-        ax.set_ylabel('CMF')
-        ax.legend_ = None
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
 
 
     def __plot_mfi(self, ax, params=None):
         values = self.__calculate_indicator("mfi", params)
 
-        ax.plot(self.indices, values, lw=0.5)
+        ax.plot(self.indices, values, lw=0.5, label="MFI", color="black")
         ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
         ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
         ax.set_ylim([0, 100])
-        ax.set_ylabel('MFI')
-        ax.legend_ = None
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
 
 
     def __plot_kdj(self, ax, params):
         values = self.__calculate_indicator("kdj", params)
 
-        ax.plot(self.indices, values, lw=0.5)
+        ax.plot(self.indices, values["K"], lw=0.5, color="red")
+        ax.plot(self.indices, values["D"], lw=0.5, color="black")
+        ax.plot(self.indices, values["J"], lw=0.5, color="blue")
         ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
         ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
-        ax.set_ylabel('KDJ')
-        ax.legend_ = None
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
 
 
     def __plot_stoch(self, ax, params):
         values = self.__calculate_indicator("stoch", params)
 
-        ax.plot(self.indices, values, lw=0.5)
+        ax.plot(self.indices, values["K"], color="red", lw=0.5)
+        ax.plot(self.indices, values["D"], color="black", lw=0.5)
         ax.axhline(80, color="red", ls="--", alpha=0.5, lw=0.5)
         ax.axhline(50, color="black", ls="--", alpha=0.5, lw=0.5)
         ax.axhline(20, color="green", ls="--", alpha=0.5, lw=0.5)
-        ax.set_ylabel('STOCH')
-        ax.legend_ = None
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
 
 
@@ -317,7 +339,6 @@ class SymbolPlotter(object):
             ax.add_patch(rect)
 
         ax.set_ylim([0, prices["Volume"].max() * 1.25])
-        ax.set_ylabel('Volume')
         ax.grid(b=True, axis='x')
 
 
@@ -363,8 +384,8 @@ class SymbolPlotter(object):
                     facecolor = color,
                     edgecolor = color,
             )
-
             rect.set_alpha(alpha)
+
             ax.add_line(vline_low)
             ax.add_line(vline_high)
             ax.add_patch(rect)
@@ -417,17 +438,15 @@ class SymbolPlotter(object):
         ax.plot(self.indices, pdi, lw=0.5, color='red')
         ax.plot(self.indices, mdi, lw=0.5, color='green')
         ax.axhline(25, color="blue", ls="--", alpha=0.5, lw=0.5)
-        ax.set_ylabel('ADX')
-        ax.legend_ = None
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
 
 
     def __plot_atr(self, ax, params):
         values = self.__calculate_indicator("atr", params)
 
-        ax.plot(self.indices, values, lw=0.5, color='black')
-        ax.set_ylabel('ATR')
-        ax.legend_ = None
+        ax.plot(self.indices, values, lw=0.5, color='black', label="ATR")
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
 
 
@@ -463,7 +482,7 @@ class SymbolPlotter(object):
         values = self.__calculate_indicator("cci", params)
         cci_val = values["CCI"]
 
-        ax.plot(self.indices, cci_val, lw=0.5, color='black')
+        ax.plot(self.indices, cci_val, lw=0.5, color='black', label="CCI")
         ax.fill_between(self.indices, 100, cci_val, where=cci_val>=100, facecolor='red', alpha=0.3, interpolate=True)
         ax.fill_between(self.indices, -100, cci_val, where=cci_val<=-100, facecolor='green', alpha=0.3, interpolate=True)
         ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
@@ -471,8 +490,7 @@ class SymbolPlotter(object):
         ax.axhline(-100, color="red", lw=0.5)
         ax.axhline(200, color="green", lw=0.5, ls='--')
         ax.axhline(-200, color="red", lw=0.5, ls='--')
-        ax.set_ylabel('CCI')
-        ax.legend_ = None
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
 
 
@@ -480,10 +498,9 @@ class SymbolPlotter(object):
         values = self.__calculate_indicator("obv", params)
         obv_val = values["OBV"]
 
-        ax.plot(self.indices, obv_val, lw=0.5, color='blue')
+        ax.plot(self.indices, obv_val, lw=0.5, color='blue', label="OBV")
         ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
-        ax.set_ylabel('OBV')
-        ax.legend_ = None
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
         ax.grid(b=True, axis='y')
 
@@ -492,9 +509,8 @@ class SymbolPlotter(object):
         values = self.__calculate_indicator("adl", params)
         adl_val = values["ADL"]
 
-        ax.plot(self.indices, adl_val, lw=0.5, color='blue')
+        ax.plot(self.indices, adl_val, lw=0.5, color='blue', label="ADL")
         ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
-        ax.set_ylabel('ADL')
-        ax.legend_ = None
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
         ax.grid(b=True, axis='y')

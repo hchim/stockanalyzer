@@ -40,22 +40,22 @@ class CanvasFrame(Frame):
         prices = daily_prices_to_weekly_prices(prices)
         plotter = SymbolPlotter(embed=True)
         figure = plotter.plot_single_symbol(prices, indicators={
-            # "VOLUME" : None,
-            # "BB" : None,
-            # "MACD" : None,
-            # "SMA" : {"windows": [5, 13]},
-            # "EMA" : {"windows": [5, 13]},
-            # "RSI" : None,
-            # "MFI" : None,
-            # "CMF" : None,
-            # "KDJ" : {"windows": [9, 3, 3]},
-            "STOCH" : {"windows": [9, 3, 3]},
-            "ADX": {"window": 14},
-            # "ATR": {"window": 14},
-            # "FRAC": {"draw_breakout": True},
-            "CCI": {"window": 14},
-            # "OBV": None,
-            # "ADL": None,
+            # "volume" : None,
+            "bb" : None,
+            # "macd" : None,
+            "sma" : {"windows": [5, 13]},
+            "ema" : {"windows": [5, 13]},
+            # "rsi" : None,
+            # "mfi" : None,
+            # "cmf" : None,
+            # "kdj" : {"windows": [9, 3, 3]},
+            # "stoch" : {"windows": [9, 3, 3]},
+            # "adx": {"window": 14},
+            # "atr": {"window": 14},
+            # "frac": {"draw_breakout": True},
+            # "cci": {"window": 14},
+            # "obv": None,
+            # "adl": None,
         })
 
         return figure
