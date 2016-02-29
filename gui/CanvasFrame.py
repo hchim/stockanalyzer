@@ -41,10 +41,10 @@ class CanvasFrame(Frame):
         plotter = SymbolPlotter(embed=True)
         figure = plotter.plot_single_symbol(prices, indicators={
             # "volume" : None,
-            "bb" : None,
+            # "bb" : None,
             # "macd" : None,
-            "sma" : {"windows": [5, 13]},
-            "ema" : {"windows": [5, 13]},
+            # "sma" : {"windows": [5, 13]},
+            # "ema" : {"windows": [5, 13]},
             # "rsi" : None,
             # "mfi" : None,
             # "cmf" : None,
@@ -56,6 +56,7 @@ class CanvasFrame(Frame):
             # "cci": {"window": 14},
             # "obv": None,
             # "adl": None,
+            "trix": {"windows": [15, 9]}
         })
 
         return figure

@@ -465,3 +465,15 @@ def adl(prices, params=None):
         adl_val[i] = adl_val[i-1] + mfv[i]
 
     return pd.DataFrame(adl_val.values, index=prices.index, columns=["ADL"])
+
+
+def trix(prices, params={"windows": [15, 9]}):
+    windows = params["windows"]
+    raw = __ema(prices["Close"], windows[0])
+    tr = __ema(__ema(raw, windows[0]), windows[0])
+    shift_tr = tr.shift(1)
+    trix_val = (tr - shift_tr) / shift_tr * 100
+    matrix = pd.rolling_mean(trix_val, windows[1])
+
+    values = np.column_stack((trix_val, matrix))
+    return pd.DataFrame(values, index=prices.index, columns=["TRIX", "MATRIX"])

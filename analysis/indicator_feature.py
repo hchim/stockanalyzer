@@ -4,7 +4,7 @@ This file implements the functions that extract features from indicators.
 import numpy as np
 import pandas as pd
 
-from indicators import sma, ema, macd, kdj, cci, adx, stoch
+from indicators import sma, ema, macd, kdj, cci, adx, stoch, trix
 
 """
 Trend Feature: it shows the current trend of the symbol.
@@ -243,6 +243,24 @@ def reverse_cci_cross(prices, params=None):
         if cci_val[i - 1] < 100 and cci_val[i] > 100:
             data[i] = 1
         elif cci_val[i - 1] > -100 and cci_val[i] < -100:
+            data[i] = -1
+
+    return pd.Series(data, index=prices.index)
+
+
+def reverse_trix_cross(prices, params=None):
+    if params is None:
+        values = trix(prices)
+    else:
+        values = trix(prices, params)
+    trix_val = values["TRIX"]
+    ma = values["MATRIX"]
+    data = np.zeros(len(prices.index))
+
+    for i in range(1, len(prices.index)):
+        if trix_val[i - 1] < ma[i-1] and trix_val[i] > ma[i]:
+            data[i] = 1
+        elif trix_val[i - 1] >= ma[i-1] and trix_val[i] <= ma[i]:
             data[i] = -1
 
     return pd.Series(data, index=prices.index)

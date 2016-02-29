@@ -11,7 +11,7 @@ class SymbolPlotter(object):
 
     # indicators that should be drawn in the subfigure
     SUBFIGURE_INDICATORS = set(['macd', 'rsi', "volume", "mfi", "cmf", "kdj", "stoch", "atr", "adx", "cci", "obv",
-                                   "adl"])
+                                   "adl", "trix"])
 
     def __init__(self, type="candlestick", max_candles=150, embed=False):
         """
@@ -172,6 +172,8 @@ class SymbolPlotter(object):
                 self.__plot_obv(ax, params)
             elif indicator == 'adl':
                 self.__plot_adl(ax, params)
+            elif indicator == 'trix':
+                self.__plot_trix(ax, params)
 
 
     def __calculate_indicator(self, indicator, params):
@@ -511,6 +513,19 @@ class SymbolPlotter(object):
 
         ax.plot(self.indices, adl_val, lw=0.5, color='blue', label="ADL")
         ax.axhline(0, color="black", ls="--", alpha=0.5, lw=0.5)
+        ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
+        ax.grid(b=True, axis='x')
+        ax.grid(b=True, axis='y')
+
+
+    def __plot_trix(self, ax, params=None):
+        values = self.__calculate_indicator("trix", params)
+        trix = values["TRIX"]
+        ma = values["MATRIX"]
+
+        ax.plot(self.indices, ma, color='black')
+        ax.plot(self.indices, trix, color='red', lw=0.5)
+        ax.axhline(0, color="blue", ls="--", alpha=0.5, lw=0.5)
         ax.legend(loc=2, ncol=3, frameon=False, fontsize="small", framealpha=0.5)
         ax.grid(b=True, axis='x')
         ax.grid(b=True, axis='y')
