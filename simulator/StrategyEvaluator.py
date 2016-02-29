@@ -39,6 +39,9 @@ class StrategyEvaluator(BaseEvaluator):
             cum_ret[i] = self.results[i]["cum_ret"]
             sharpe_ratio[i] = self.results[i]["sharpe_ratio"]
 
+        cum_ret = cum_ret[~np.isnan(cum_ret)]
+        sharpe_ratio = sharpe_ratio[~np.isnan(sharpe_ratio)]
+
         self.report = "Cumulative return: AVG:{} MIN:{} MAX:{} MEDIAN:{} \n " \
                       "Sharpe ratio: AVG:{} MIN:{} MAX:{} MEDIAN:{}" \
             .format(

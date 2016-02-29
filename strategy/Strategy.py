@@ -1,23 +1,31 @@
 import pandas as pd
 
 import analysis.indicator_feature as indfr
-
+from analysis.basic import daily_prices_to_weekly_prices
 
 class Strategy(object):
 
-    def __init__(self, features, allow_short=True, start_value=1000000):
-        self.features_params = features
+    def __init__(self, features, week_features=None, allow_short=True, start_value=1000000):
+        """
+        Parameters
+        -----------
+        features: dict
+            Format: [("feature_function_name", {feature parameters})]
+        week_features: dict
+        """
+        self.feature_params = features
+        self.week_feature_params = week_features
         self.allow_short = allow_short
         self.start_value = start_value
 
 
-    def __calculate_features(self):
-        if self.features_params is None:
+    def __calculate_features(self, feature_params, prices):
+        if feature_params is None:
             return None
 
-        features = pd.DataFrame(index=self.prices.index)
-        for f in self.features_params:
-            values = getattr(indfr, f[0])(self.prices, f[1])
+        features = pd.DataFrame(index=prices.index)
+        for f in feature_params:
+            values = getattr(indfr, f[0])(prices, f[1])
             features = features.join(values.to_frame())
             features.rename(columns={features.columns[-1]: f[0]}, inplace=True)
 
@@ -26,14 +34,29 @@ class Strategy(object):
 
     def generate_orders(self, prices, symbol):
         self.prices = prices
-        self.features = self.__calculate_features()
+        self.features = self.__calculate_features(self.feature_params, prices)
+        if self.week_feature_params is not None:
+            self.week_prices = daily_prices_to_weekly_prices(prices)
+            self.week_features = self.__calculate_features(self.week_feature_params, self.week_prices)
 
         cash = self.start_value
         long_shares = short_shares = 0
-        dates = prices.index
         orders = []
+        week_index = 0
+        pre_week = prices.index[0].isocalendar()[1]
+        self.curr_week_features = None
 
-        for date in dates:
+        for date in prices.index:
+            if self.week_feature_params is not None:
+                week = date.isocalendar()[1]
+                if week != pre_week:
+                    self.curr_week_features = self.week_features.iloc[week_index]
+                    week_index += 1
+                    pre_week = week
+
+                if self.curr_week_features is None:
+                    continue
+
             self.curr_features = self.features.loc[date]
             close = prices.loc[date, 'Close']
 

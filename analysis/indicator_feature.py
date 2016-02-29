@@ -4,7 +4,7 @@ This file implements the functions that extract features from indicators.
 import numpy as np
 import pandas as pd
 
-from indicators import sma, ema, macd, kdj, cci, adx
+from indicators import sma, ema, macd, kdj, cci, adx, stoch
 
 """
 Trend Feature: it shows the current trend of the symbol.
@@ -92,11 +92,33 @@ def trend_adx(prices, params={"window": 14, "threshold": 20}):
     data = np.zeros(len(prices.index))
 
     for i in range(len(prices.index)):
+        if np.isnan(adx_val[i]) or np.isnan(pdi[i]) or np.isnan(mdi[i]):
+            continue
+
         if adx_val[i] > params["threshold"]:
             if pdi[i] > mdi[i]:
                 data[i] = 1
             else:
                 data[i] = -1
+
+    return pd.Series(data, index=prices.index)
+
+
+def trend_stoch(prices, params={"windows": [14, 3, 3]}):
+    stoch_val = stoch(prices, params)
+
+    k = stoch_val["K"]
+    d = stoch_val["D"]
+    data = np.zeros(len(prices.index))
+
+    for i in range(len(prices.index)):
+        if np.isnan(k[i]) or np.isnan(d[i]):
+            continue
+
+        if k[i] > d[i]:
+            data[i] = 1
+        else:
+            data[i] = -1
 
     return pd.Series(data, index=prices.index)
 
@@ -118,6 +140,9 @@ def reverse_kdj_over_sell_buy(prices, params={"thresholds": [0, 100]}):
     j_val = kdj_val["J"]
 
     for i in range(len(prices.index)):
+        if np.isnan(j_val[i]):
+            continue
+
         if j_val[i - 1] < thresholds[0] and j_val[i] > thresholds[0]:
             data[i] = 1
         elif j_val[i - 1] > thresholds[1] and j_val[i] < thresholds[1]:

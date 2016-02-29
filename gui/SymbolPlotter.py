@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 import analysis.indicators as inds
-import matplotlib.patches as mpatches
 
 from matplotlib.lines import Line2D
 from matplotlib.patches import Rectangle
@@ -230,8 +229,9 @@ class SymbolPlotter(object):
         for i in range(len(orders)):
             date = orders.loc[i, 'Date']
             operate = orders.loc[i, 'Order']
-            ind = dates.index(date)
-            if ind == -1:
+            try:
+                ind = dates.index(date)
+            except ValueError:
                 continue
 
             if operate == 'BUY':
