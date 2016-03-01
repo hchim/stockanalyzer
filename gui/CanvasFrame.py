@@ -37,7 +37,7 @@ class CanvasFrame(Frame):
         startdate = today - timedelta(days=3650)
 
         prices = get_data_of_symbol(symbol, startdate.isoformat(), today.isoformat(), fill_empty=False)
-        prices = daily_prices_to_weekly_prices(prices)
+        # prices = daily_prices_to_weekly_prices(prices)
         plotter = SymbolPlotter(embed=True)
         figure = plotter.plot_single_symbol(prices, indicators={
             # "volume" : None,
@@ -45,8 +45,8 @@ class CanvasFrame(Frame):
             # "macd" : None,
             # "sma" : {"windows": [5, 13]},
             # "ema" : {"windows": [5, 13]},
-            # "rsi" : None,
-            # "mfi" : None,
+            "rsi" : None,
+            "mfi" : None,
             # "cmf" : None,
             # "kdj" : {"windows": [9, 3, 3]},
             # "stoch" : {"windows": [9, 3, 3]},

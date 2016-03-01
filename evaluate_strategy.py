@@ -14,7 +14,7 @@ def test_kdjstrategy(symbol):
     orders = strategy.generate_orders(prices, symbol)
 
     plotter = SymbolPlotter(max_candles=150)
-    plotter.plot_single_symbol(prices, indicators={"kdj": {"windows": [14, 3, 3]}}, orders=orders)
+    plotter.plot_single_symbol(prices, indicators={"stoch": {"windows": [14, 3, 3]}}, orders=orders)
     print orders
 
 
@@ -26,5 +26,5 @@ def evaluate_kdjstrategy():
 
 
 if __name__ == "__main__":
-    # test_kdjstrategy("AMZN")
-    evaluate_kdjstrategy()
+    test_kdjstrategy("VMW")
+    # evaluate_kdjstrategy()

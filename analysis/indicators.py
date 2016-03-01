@@ -130,13 +130,12 @@ def rsi(prices, params={"window": 14}):
     close = prices["Close"]
 
     delta = close - close.shift(1)  # the difference between rows
-    gain = delta[delta > 0]  # gain
-    lose = delta[delta < 0]  # lose
-    data = pd.concat([delta, gain, lose], axis=1)
-    data.fillna(0, inplace=True) # fill NAN values
-    data = pd.rolling_mean(data, window)  # average daily gain and lose
+    gain = delta.copy()
+    lose = delta.copy()
+    gain[gain < 0] = 0
+    lose[lose > 0] = 0
 
-    rs = data.iloc[:, 1] / data.iloc[:,2] * -1
+    rs = pd.rolling_mean(gain, window) / abs(pd.rolling_mean(lose, window))
     rsi_val = 100 - 100 / (1 + rs)
     return pd.DataFrame(rsi_val.values, index=prices.index, columns=["RSI"])
 
@@ -201,13 +200,12 @@ def mfi(prices, params={"window": 14}):
     window = params["window"]
     tp = __tp(prices)
     rmf = tp * prices['Volume']
+    close = prices["Close"]
+    ret = close - close.shift(1)
     prmf = rmf.copy()
     nrmf = rmf.copy()
-    for date in prices.index:
-        if prices.loc[date, 'Close'] >= prices.loc[date, 'Open']:
-            nrmf[date] = 0
-        else:
-            prmf[date] = 0
+    prmf[ret < 0] = 0
+    nrmf[ret > 0] = 0
 
     mfr = pd.rolling_sum(prmf, window)/pd.rolling_sum(nrmf, window)
     mfi_val = 100 - 100. / (1 + mfr)
