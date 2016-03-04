@@ -102,11 +102,11 @@ def test_nbayes_learner():
 
 if __name__ == "__main__":
     # test_webdata_multiple()
-    test_portfolio_optimize()
+    # test_portfolio_optimize()
     # test_market_correlation_analysis()
     # evaluate_strategy()
     # test_strategy()
     # test_qstrategy()
     # test_nbayes_learner()
     # test_candlestick_patterns()
-    # test_nbayes_learner()
+    test_nbayes_learner()

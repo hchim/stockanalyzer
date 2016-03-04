@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+from analysis.basic import compute_daily_returns
+import math
 
 def sma(prices, params):
     """
@@ -475,3 +477,21 @@ def trix(prices, params={"windows": [15, 9]}):
 
     values = np.column_stack((trix_val, matrix))
     return pd.DataFrame(values, index=prices.index, columns=["TRIX", "MATRIX"])
+
+
+def mafe(prices, params={"window": 5}):
+    """
+    This indicator evaluate the efficiency of funds. It is very similar to the momentum
+    indicator, their figure looks the same most of the time, except when a significant
+    price change (either increase or decrease) does not have a corresponding volume increase.
+
+    It is better to read this indicator with volume.
+    """
+    window = params["window"]
+    ret = compute_daily_returns(prices["Close"])
+    rmf = __tp(prices) * prices['Volume']
+    values = ret / rmf
+    mean = math.fabs(np.mean(values))
+    ma = pd.rolling_mean(values / mean, window)
+
+    return pd.DataFrame(ma, index=prices.index, columns=["MAFE"])
