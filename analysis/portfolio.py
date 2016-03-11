@@ -60,7 +60,7 @@ def get_portfolio_stats(port_val, daily_rf=0, samples_per_year=252):
     return cum_ret, avg_daily_ret, std_daily_ret, sharpe_ratio
 
 
-def objective_fun_max_sharpe_ratio(allocs, prices):
+def __objective_fun_max_sharpe_ratio(allocs, prices):
     """
     The objective function that return max sharpe ratio.
 
@@ -107,7 +107,7 @@ def find_optimal_allocations(prices):
     bnds = tuple(bnds)
 
     min_result = spo.minimize(
-        objective_fun_max_sharpe_ratio, # objective function
+        __objective_fun_max_sharpe_ratio, # objective function
         initial_allocs,                 # guess value
         args = (prices,),				# extra args passed to the objective fun
         method='SLSQP',                 # optimize algorithm to use
